@@ -23,7 +23,7 @@ importers:
 
   apps/web:
     dependencies:
-      '@workspace/ui':
+      '@gaia/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       lucide-react:

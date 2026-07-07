@@ -5,7 +5,7 @@
 ## Workspace layout
 
 - `apps/web` — Vite 8 + React 19 app. Entry: `src/main.tsx` → `src/App.tsx`
-- `packages/ui` — shared UI component lib (`@workspace/ui`). shadcn components land in `src/components/`
+- `packages/ui` — shared UI component lib (`@gaia/ui`). shadcn components land in `src/components/`
 
 ## Developer commands (run from root)
 
@@ -27,7 +27,7 @@
 - **shadcn/ui v4** (base-nova style) — uses `@base-ui/react` primitives (not Radix), `@shadcn/tailwind.css` plugin, `tw-animate-css`
 - **Path aliases** (configured in `apps/web/tsconfig.app.json` and `vite.config.ts`):
   - `@/` → `apps/web/src/`
-  - `@workspace/ui/*` → `packages/ui/src/*`
+  - `@gaia/ui/*` → `packages/ui/src/*`
 - **CSS entrypoint** is `packages/ui/src/styles/globals.css` — imported in `apps/web/src/main.tsx`
 - **React 19** — stable, but be aware of removed APIs (e.g., deprecated lifecycle methods, removed propTypes inference)
 - **Dark mode** via `ThemeProvider` — press `d` key to toggle, persisted to localStorage key `"theme"`
@@ -36,9 +36,9 @@
 
 Add components with `pnpm dlx shadcn@latest add <component> -c apps/web`.
 
-This writes to `packages/ui/src/components/`. Import from `@workspace/ui/components/<name>`:
+This writes to `packages/ui/src/components/`. Import from `@gaia/ui/components/<name>`:
 ```tsx
-import { Button } from "@workspace/ui/components/button"
+import { Button } from "@gaia/ui/components/button"
 ```
 
 ## Adding npm packages

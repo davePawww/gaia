@@ -11,11 +11,11 @@
   },
   "iconLibrary": "lucide",
   "aliases": {
-    "components": "@workspace/ui/components",
-    "utils": "@workspace/ui/lib/utils",
-    "hooks": "@workspace/ui/hooks",
-    "lib": "@workspace/ui/lib",
-    "ui": "@workspace/ui/components"
+    "components": "@gaia/ui/components",
+    "utils": "@gaia/ui/lib/utils",
+    "hooks": "@gaia/ui/hooks",
+    "lib": "@gaia/ui/lib",
+    "ui": "@gaia/ui/components"
   },
   "rtl": false,
   "menuColor": "default",

@@ -12,7 +12,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@workspace/ui": "workspace:*",
+    "@gaia/ui": "workspace:*",
     "lucide-react": "^1.23.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
