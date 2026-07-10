@@ -1,5 +1,6 @@
 import * as React from "react"
 
+import { Button } from "@gaia/ui/components/button"
 import { cn } from "@gaia/ui/lib/utils"
 
 function Header({ className, ...props }: React.ComponentProps<"header">) {
@@ -48,14 +49,13 @@ function HeaderRight({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function HeaderMenuTrigger({ className, ...props }: React.ComponentProps<"button">) {
+function HeaderMenuTrigger({ className, ...props }: React.ComponentProps<typeof Button>) {
   return (
-    <button
+    <Button
       data-slot="header-menu-trigger"
-      className={cn(
-        "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 lg:hidden",
-        className
-      )}
+      variant="ghost"
+      size="icon"
+      className={cn("lg:hidden", className)}
       {...props}
     />
   )
