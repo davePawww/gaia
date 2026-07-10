@@ -1,7 +1,32 @@
 import * as React from "react"
 
 import { Button } from "@gaia/ui/components/button"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@gaia/ui/components/sheet"
 import { cn } from "@gaia/ui/lib/utils"
+
+interface NavItem {
+  label: string
+  href: string
+}
+
+interface Action {
+  label: string
+  variant?: "default" | "ghost" | "outline"
+  onClick?: () => void
+}
+
+interface ResponsiveHeaderProps {
+  logo: React.ReactNode
+  navItems?: NavItem[]
+  actions?: Action[]
+  className?: string
+}
 
 function Header({ className, ...props }: React.ComponentProps<"header">) {
   return (
@@ -61,4 +86,87 @@ function HeaderMenuTrigger({ className, ...props }: React.ComponentProps<typeof 
   )
 }
 
-export { Header, HeaderLeft, HeaderNav, HeaderRight, HeaderMenuTrigger }
+function ResponsiveHeader({ logo, navItems = [], actions = [], className }: ResponsiveHeaderProps) {
+  return (
+    <Header className={className}>
+      <HeaderLeft>{logo}</HeaderLeft>
+      <HeaderNav>
+        {navItems.map((item) => (
+          <a key={item.href} href={item.href}>
+            {item.label}
+          </a>
+        ))}
+      </HeaderNav>
+      <HeaderRight>
+        {actions.map((action) => (
+          <Button
+            key={action.label}
+            variant={action.variant ?? "ghost"}
+            size="sm"
+            onClick={action.onClick}
+          >
+            {action.label}
+          </Button>
+        ))}
+      </HeaderRight>
+      <Sheet>
+        <SheetTrigger render={<HeaderMenuTrigger />}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="4" x2="20" y1="12" y2="12" />
+            <line x1="4" x2="20" y1="6" y2="6" />
+            <line x1="4" x2="20" y1="18" y2="18" />
+          </svg>
+          <span className="sr-only">Toggle menu</span>
+        </SheetTrigger>
+        <SheetContent side="right" className="flex w-[300px] flex-col sm:w-[400px]">
+          <SheetHeader>
+            <SheetTitle>Menu</SheetTitle>
+          </SheetHeader>
+          <nav className="flex flex-1 flex-col gap-4 py-6">
+            {navItems.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="text-lg font-medium"
+              >
+                {item.label}
+              </a>
+            ))}
+          </nav>
+          <div className="flex flex-col gap-3 border-t pt-6">
+            {actions.map((action) => (
+              <Button
+                key={action.label}
+                variant={action.variant ?? "outline"}
+                className="w-full"
+                onClick={action.onClick}
+              >
+                {action.label}
+              </Button>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
+    </Header>
+  )
+}
+
+export {
+  Header,
+  HeaderLeft,
+  HeaderNav,
+  HeaderRight,
+  HeaderMenuTrigger,
+  ResponsiveHeader,
+}
+export type { NavItem, Action, ResponsiveHeaderProps }
