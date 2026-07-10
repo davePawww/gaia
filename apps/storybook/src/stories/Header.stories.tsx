@@ -70,7 +70,7 @@ export const Responsive: Story = {
           { label: "About", href: "#" },
         ]}
         actions={[
-          { label: "Sign In", variant: "ghost" },
+          { label: "Sign In", variant: "secondary" },
           { label: "Get Started", variant: "default" },
         ]}
       />

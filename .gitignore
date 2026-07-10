@@ -34,3 +34,6 @@ dist-ssr
 
 # typescript
 *.tsbuildinfo
+
+# superpowers docs
+docs/
