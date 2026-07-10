@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { Button } from "@gaia/ui/components/button"
+import { Button, buttonVariants } from "@gaia/ui/components/button"
 import {
   Sheet,
   SheetContent,
@@ -9,6 +9,7 @@ import {
   SheetTrigger,
 } from "@gaia/ui/components/sheet"
 import { cn } from "@gaia/ui/lib/utils"
+import type { VariantProps } from "class-variance-authority"
 
 interface NavItem {
   label: string
@@ -17,7 +18,7 @@ interface NavItem {
 
 interface Action {
   label: string
-  variant?: "default" | "ghost" | "outline"
+  variant?: VariantProps<typeof buttonVariants>["variant"]
   onClick?: () => void
 }
 
@@ -74,19 +75,27 @@ function HeaderRight({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function HeaderMenuTrigger({ className, ...props }: React.ComponentProps<typeof Button>) {
+function HeaderMenuTrigger({
+  className,
+  ...props
+}: React.ComponentProps<typeof Button>) {
   return (
     <Button
       data-slot="header-menu-trigger"
       variant="ghost"
       size="icon"
-      className={cn("ml-auto lg:hidden", className)}
+      className={cn("ml-auto md:hidden", className)}
       {...props}
     />
   )
 }
 
-function ResponsiveHeader({ logo, navItems = [], actions = [], className }: ResponsiveHeaderProps) {
+function ResponsiveHeader({
+  logo,
+  navItems = [],
+  actions = [],
+  className,
+}: ResponsiveHeaderProps) {
   return (
     <Header className={className}>
       <HeaderLeft>{logo}</HeaderLeft>
@@ -128,11 +137,14 @@ function ResponsiveHeader({ logo, navItems = [], actions = [], className }: Resp
           </svg>
           <span className="sr-only">Toggle menu</span>
         </SheetTrigger>
-        <SheetContent side="right" className="flex w-[300px] flex-col sm:w-[400px]">
+        <SheetContent
+          side="right"
+          className="flex w-[300px] flex-col sm:w-[400px]"
+        >
           <SheetHeader>
             <SheetTitle>Menu</SheetTitle>
           </SheetHeader>
-          <nav className="flex flex-1 flex-col gap-4 py-6">
+          <nav className="flex flex-1 flex-col gap-4 p-4">
             {navItems.map((item) => (
               <a
                 key={item.href}
@@ -143,7 +155,7 @@ function ResponsiveHeader({ logo, navItems = [], actions = [], className }: Resp
               </a>
             ))}
           </nav>
-          <div className="flex flex-col gap-3 border-t pt-6">
+          <div className="flex flex-col gap-3 border-t px-4 py-6">
             {actions.map((action) => (
               <Button
                 key={action.label}
