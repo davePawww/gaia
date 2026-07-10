@@ -55,7 +55,7 @@ function HeaderMenuTrigger({ className, ...props }: React.ComponentProps<typeof 
       data-slot="header-menu-trigger"
       variant="ghost"
       size="icon"
-      className={cn("lg:hidden", className)}
+      className={cn("ml-auto lg:hidden", className)}
       {...props}
     />
   )
