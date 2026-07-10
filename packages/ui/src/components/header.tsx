@@ -43,7 +43,7 @@ function HeaderRight({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="header-right"
-      className={cn("ml-auto hidden items-center gap-3 sm:flex", className)}
+      className={cn("ml-auto hidden items-center gap-3 md:flex", className)}
       {...props}
     />
   )
