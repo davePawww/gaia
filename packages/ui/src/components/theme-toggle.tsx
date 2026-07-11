@@ -17,3 +17,23 @@ export function ThemeToggle() {
     </Button>
   )
 }
+
+export function ThemeToggleFullWidth() {
+  const { theme, setTheme } = useTheme()
+  const isDark = theme === "dark"
+
+  return (
+    <Button
+      variant="outline"
+      className="w-full justify-start gap-2"
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+    >
+      {isDark ? (
+        <Sun className="h-4 w-4" />
+      ) : (
+        <Moon className="h-4 w-4" />
+      )}
+      {isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+    </Button>
+  )
+}

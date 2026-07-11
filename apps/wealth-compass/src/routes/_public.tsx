@@ -6,7 +6,7 @@ import {
   HeaderRight,
   HeaderMenuTrigger,
 } from "@gaia/ui/components/header"
-import { ThemeToggle } from "@gaia/ui/components/theme-toggle"
+import { ThemeToggle, ThemeToggleFullWidth } from "@gaia/ui/components/theme-toggle"
 import { Button } from "@gaia/ui/components/button"
 import {
   Sheet,
@@ -81,7 +81,7 @@ function PublicLayout() {
               ))}
             </nav>
             <div className="flex flex-col gap-3 border-t px-4 py-6">
-              <ThemeToggle />
+              <ThemeToggleFullWidth />
               <Button variant="secondary" className="w-full">
                 Sign In
               </Button>
