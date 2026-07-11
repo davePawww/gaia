@@ -4,9 +4,6 @@ import { Label } from "@gaia/ui/components/label"
 const meta: Meta<typeof Label> = {
   title: "Components/Label",
   component: Label,
-  parameters: {
-    layout: "centered",
-  },
   argTypes: {
     children: {
       control: "text",

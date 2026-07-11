@@ -4,9 +4,6 @@ import { Skeleton } from "@gaia/ui/components/skeleton"
 const meta: Meta<typeof Skeleton> = {
   title: "Components/Skeleton",
   component: Skeleton,
-  parameters: {
-    layout: "centered",
-  },
 }
 
 export default meta

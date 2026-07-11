@@ -52,9 +52,6 @@ function SelectWithGroups() {
 const meta: Meta<typeof Select> = {
   title: "Components/Select",
   component: BasicSelect,
-  parameters: {
-    layout: "centered",
-  },
 }
 
 export default meta

@@ -4,9 +4,6 @@ import { Checkbox } from "@gaia/ui/components/checkbox"
 const meta: Meta<typeof Checkbox> = {
   title: "Components/Checkbox",
   component: Checkbox,
-  parameters: {
-    layout: "centered",
-  },
   args: {
     "aria-label": "Checkbox",
   },

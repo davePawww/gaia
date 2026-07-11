@@ -39,9 +39,6 @@ function TooltipOnIcon() {
 const meta: Meta<typeof Tooltip> = {
   title: "Components/Tooltip",
   component: SimpleTooltip,
-  parameters: {
-    layout: "centered",
-  },
 }
 
 export default meta

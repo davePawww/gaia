@@ -4,9 +4,6 @@ import { Separator } from "@gaia/ui/components/separator"
 const meta: Meta<typeof Separator> = {
   title: "Components/Separator",
   component: Separator,
-  parameters: {
-    layout: "centered",
-  },
   argTypes: {
     orientation: {
       control: "select",

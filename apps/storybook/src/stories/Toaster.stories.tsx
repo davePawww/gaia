@@ -68,9 +68,6 @@ function ToastDemo() {
 const meta: Meta<typeof Toaster> = {
   title: "Components/Toaster",
   component: ToastDemo,
-  parameters: {
-    layout: "centered",
-  },
 }
 
 export default meta

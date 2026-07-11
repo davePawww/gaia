@@ -35,9 +35,6 @@ function SmallCard() {
 const meta: Meta<typeof Card> = {
   title: "Components/Card",
   component: DefaultCard,
-  parameters: {
-    layout: "centered",
-  },
 }
 
 export default meta

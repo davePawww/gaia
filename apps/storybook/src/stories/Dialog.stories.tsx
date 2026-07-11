@@ -34,9 +34,6 @@ function SimpleDialog() {
 const meta: Meta<typeof Dialog> = {
   title: "Components/Dialog",
   component: SimpleDialog,
-  parameters: {
-    layout: "centered",
-  },
 }
 
 export default meta

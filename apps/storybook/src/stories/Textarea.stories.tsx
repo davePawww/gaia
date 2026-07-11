@@ -4,9 +4,6 @@ import { Textarea } from "@gaia/ui/components/textarea"
 const meta: Meta<typeof Textarea> = {
   title: "Components/Textarea",
   component: Textarea,
-  parameters: {
-    layout: "centered",
-  },
   argTypes: {
     placeholder: {
       control: "text",

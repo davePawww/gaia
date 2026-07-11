@@ -4,9 +4,6 @@ import { Badge } from "@gaia/ui/components/badge"
 const meta: Meta<typeof Badge> = {
   title: "Components/Badge",
   component: Badge,
-  parameters: {
-    layout: "centered",
-  },
   argTypes: {
     variant: {
       control: "select",

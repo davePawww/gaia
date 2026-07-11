@@ -4,9 +4,6 @@ import { Input } from "@gaia/ui/components/input"
 const meta: Meta<typeof Input> = {
   title: "Components/Input",
   component: Input,
-  parameters: {
-    layout: "centered",
-  },
   argTypes: {
     type: {
       control: "select",

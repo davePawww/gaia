@@ -4,9 +4,6 @@ import { Switch } from "@gaia/ui/components/switch"
 const meta: Meta<typeof Switch> = {
   title: "Components/Switch",
   component: Switch,
-  parameters: {
-    layout: "centered",
-  },
   args: {
     "aria-label": "Toggle setting",
   },
