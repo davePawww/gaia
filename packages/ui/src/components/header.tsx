@@ -34,7 +34,7 @@ function Header({ className, ...props }: React.ComponentProps<"header">) {
     <header
       data-slot="header"
       className={cn(
-        "flex h-16 w-full items-center gap-4 border-b bg-background px-6",
+        "flex h-16 w-full items-center gap-4 border-b border-border bg-muted/40 px-6",
         className
       )}
       {...props}

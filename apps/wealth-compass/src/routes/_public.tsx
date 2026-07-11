@@ -25,7 +25,9 @@ function PublicLayout() {
         <Outlet />
       </main>
       <Footer>
-        <FooterBottom>Credits to Dave Paurillo</FooterBottom>
+        <FooterBottom>
+          &copy; 2026 Dave Paurillo. All rights reserved. ​
+        </FooterBottom>
       </Footer>
     </div>
   )

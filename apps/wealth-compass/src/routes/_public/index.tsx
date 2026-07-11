@@ -14,12 +14,48 @@ import {
 } from "lucide-react"
 
 const jars = [
-  { name: "NEC", percentage: 55, icon: Home, color: "text-red-500", desc: "Necessities" },
-  { name: "LTSS", percentage: 10, icon: Shield, color: "text-blue-500", desc: "Long-term Savings" },
-  { name: "EDU", percentage: 10, icon: BookOpen, color: "text-yellow-500", desc: "Education" },
-  { name: "PLAY", percentage: 10, icon: Gamepad2, color: "text-purple-500", desc: "Play" },
-  { name: "GIVE", percentage: 10, icon: Heart, color: "text-green-500", desc: "Give" },
-  { name: "FFA", percentage: 5, icon: TrendingUp, color: "text-amber-500", desc: "Financial Freedom" },
+  {
+    name: "NEC",
+    percentage: 55,
+    icon: Home,
+    color: "text-red-500",
+    desc: "Necessities",
+  },
+  {
+    name: "LTSS",
+    percentage: 10,
+    icon: Shield,
+    color: "text-blue-500",
+    desc: "Long-term Savings",
+  },
+  {
+    name: "EDU",
+    percentage: 10,
+    icon: BookOpen,
+    color: "text-yellow-500",
+    desc: "Education",
+  },
+  {
+    name: "PLAY",
+    percentage: 10,
+    icon: Gamepad2,
+    color: "text-purple-500",
+    desc: "Play",
+  },
+  {
+    name: "GIVE",
+    percentage: 10,
+    icon: Heart,
+    color: "text-green-500",
+    desc: "Give",
+  },
+  {
+    name: "FFA",
+    percentage: 5,
+    icon: TrendingUp,
+    color: "text-amber-500",
+    desc: "Financial Freedom",
+  },
 ]
 
 const features = [
@@ -46,12 +82,14 @@ function LandingPage() {
       {/* Hero */}
       <section className="flex flex-col items-center justify-center px-6 py-24 text-center">
         <h1 className="text-5xl font-bold tracking-tight sm:text-6xl">
-          Build Wealth,<br />One Jar at a Time
+          Build Wealth,
+          <br />
+          One Jar at a Time
         </h1>
         <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
-          The Money Jar System helps you take control of your finances by dividing
-          every dollar into purposeful categories. Stop guessing where your money
-          goes - start directing it.
+          The Money Jar System helps you take control of your finances by
+          dividing every dollar into purposeful categories. Stop guessing where
+          your money goes - start directing it.
         </p>
         <div className="mt-8 flex gap-4">
           <Button size="lg">
@@ -65,7 +103,7 @@ function LandingPage() {
       </section>
 
       {/* Jar Overview */}
-      <section className="border-t bg-muted/40 px-6 py-20">
+      <section className="bg-muted/40 px-6 py-20">
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="text-3xl font-bold">Six Jars. Total Control.</h2>
           <p className="mt-4 text-muted-foreground">
@@ -98,7 +136,10 @@ function LandingPage() {
         </div>
         <div className="mx-auto mt-12 grid max-w-3xl gap-8 sm:grid-cols-3">
           {features.map((feat) => (
-            <div key={feat.title} className="flex flex-col items-center text-center">
+            <div
+              key={feat.title}
+              className="flex flex-col items-center text-center"
+            >
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                 <feat.icon className="h-6 w-6 text-primary" />
               </div>
@@ -110,7 +151,7 @@ function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="border-t bg-muted/40 px-6 py-20 text-center">
+      <section className="bg-muted/40 px-6 py-20 text-center">
         <h2 className="text-3xl font-bold">Ready to Take Control?</h2>
         <p className="mt-4 text-muted-foreground">
           Start building wealth today with the Money Jar System.
