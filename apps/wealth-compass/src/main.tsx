@@ -1,12 +1,10 @@
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { RouterProvider, createRouter } from "@tanstack/react-router"
-import { ConvexProvider, ConvexReactClient } from "convex/react"
 import { ThemeProvider } from "@gaia/ui/lib/theme-provider"
+import { AuthProvider } from "./lib/auth"
 import { routeTree } from "./routeTree.gen"
 import "./index.css"
-
-const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL)
 
 const router = createRouter({ routeTree })
 
@@ -19,9 +17,9 @@ declare module "@tanstack/react-router" {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider defaultTheme="system">
-      <ConvexProvider client={convex}>
+      <AuthProvider>
         <RouterProvider router={router} />
-      </ConvexProvider>
+      </AuthProvider>
     </ThemeProvider>
   </StrictMode>
 )

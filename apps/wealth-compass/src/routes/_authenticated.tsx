@@ -1,4 +1,5 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router"
+import { createFileRoute, Outlet } from "@tanstack/react-router"
+import { useAuthActions } from "@convex-dev/auth/react"
 import {
   SidebarProvider,
   Sidebar,
@@ -30,6 +31,8 @@ import {
   LogOut,
   User,
 } from "lucide-react"
+import { useQuery } from "convex/react"
+import { api } from "../../convex/_generated/api"
 
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -40,6 +43,13 @@ const navItems = [
 ]
 
 function AuthenticatedLayout() {
+  const { signOut } = useAuthActions()
+  const convexUser = useQuery(api.users.getCurrentUser)
+
+  const userInitial = convexUser?.name
+    ? convexUser.name.charAt(0).toUpperCase()
+    : "U"
+
   return (
     <SidebarProvider>
       <Sidebar>
@@ -71,16 +81,18 @@ function AuthenticatedLayout() {
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={undefined} alt="User" />
-                  <AvatarFallback>U</AvatarFallback>
+                  <AvatarFallback>{userInitial}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">User</p>
+                  <p className="text-sm font-medium leading-none">
+                    {convexUser?.name ?? "User"}
+                  </p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    user@example.com
+                    {convexUser?.email ?? "user@example.com"}
                   </p>
                 </div>
               </DropdownMenuLabel>
@@ -92,7 +104,7 @@ function AuthenticatedLayout() {
                 </a>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => console.log("sign out")}>
+              <DropdownMenuItem onClick={() => signOut()}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Sign out</span>
               </DropdownMenuItem>
@@ -107,7 +119,8 @@ function AuthenticatedLayout() {
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
-    // Auth check will be added in Task 4
+    // Auth check will be verified during Task 4 step 7
+    // For now, the ConvexAuthProvider handles auth state
   },
   component: AuthenticatedLayout,
 })
