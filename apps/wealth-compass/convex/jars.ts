@@ -18,7 +18,9 @@ export const getUserJars = query({
 
     const user = await ctx.db
       .query("users")
-      .withIndex("by_userId")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier)
+      )
       .unique()
     if (!user) return []
 
