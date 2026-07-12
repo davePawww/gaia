@@ -1,40 +1,73 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useAuthActions } from "@convex-dev/auth/react"
 import { useState } from "react"
 import { Button } from "@gaia/ui/components/button"
 import { Input } from "@gaia/ui/components/input"
 import { Label } from "@gaia/ui/components/label"
+import { Link } from "@tanstack/react-router"
+import { ChevronLeft } from "lucide-react"
+import { toast } from "sonner"
 
-function SignInPage() {
+function SignUpPage() {
+  const navigate = useNavigate()
   const { signIn } = useAuthActions()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [name, setName] = useState("")
   const [loading, setLoading] = useState(false)
 
-  const handleEmailSignIn = async (e: React.FormEvent) => {
+  const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     try {
-      await signIn("password", { email, password, flow: "signIn" })
+      await signIn("password", { email, password, name, flow: "signUp" })
+      toast.success("Account created successfully!")
+      navigate({ to: "/dashboard" })
+    } catch (error) {
+      console.error(error)
+      toast.error("Failed to create account. Please try again.")
     } finally {
       setLoading(false)
     }
   }
 
-  const handleGoogleSignIn = async () => {
-    await signIn("google")
+  const handleGoogleSignUp = async () => {
+    try {
+      await signIn("google")
+    } catch (error) {
+      console.error(error)
+      toast.error("Failed to sign up with Google.")
+    }
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-md space-y-6">
+        <Link 
+          to="/" 
+          className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"
+        >
+          <ChevronLeft className="mr-1 h-4 w-4" />
+          Back to Home
+        </Link>
         <div className="text-center">
-          <h1 className="text-2xl font-bold">Sign In</h1>
+          <h1 className="text-2xl font-bold">Create Account</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Welcome back to Wealth Compass
+            Start building wealth with the Money Jar System
           </p>
         </div>
-        <form onSubmit={handleEmailSignIn} className="space-y-4">
+        <form onSubmit={handleEmailSignUp} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Name</Label>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -51,14 +84,14 @@ function SignInPage() {
             <Input
               id="password"
               type="password"
-              placeholder="Your password"
+              placeholder="Create a password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? "Creating account..." : "Sign Up"}
           </Button>
         </form>
         <div className="relative">
@@ -74,24 +107,21 @@ function SignInPage() {
         <Button
           variant="outline"
           className="w-full"
-          onClick={handleGoogleSignIn}
+          onClick={handleGoogleSignUp}
         >
-          Sign in with Google
+          Sign up with Google
         </Button>
         <p className="text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
-          <a
-            href="/sign-up"
-            className="text-primary underline-offset-4 hover:underline"
-          >
-            Sign up
-          </a>
+          Already have an account?{" "}
+          <Link to="/sign-in" className="text-primary underline-offset-4 hover:underline">
+            Sign in
+          </Link>
         </p>
       </div>
     </div>
   )
 }
 
-export const Route = createFileRoute("/_public/sign-in")({
-  component: SignInPage,
+export const Route = createFileRoute("/sign-up")({
+  component: SignUpPage,
 })

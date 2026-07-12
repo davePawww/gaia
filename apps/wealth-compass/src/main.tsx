@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client"
 import { RouterProvider, createRouter } from "@tanstack/react-router"
 import { ThemeProvider } from "@gaia/ui/lib/theme-provider"
 import { AuthProvider } from "./lib/auth"
+import { Toaster } from "@gaia/ui/components/sonner"
 import { routeTree } from "./routeTree.gen"
 import "./index.css"
 
@@ -19,6 +20,7 @@ createRoot(document.getElementById("root")!).render(
     <ThemeProvider defaultTheme="system">
       <AuthProvider>
         <RouterProvider router={router} />
+        <Toaster />
       </AuthProvider>
     </ThemeProvider>
   </StrictMode>

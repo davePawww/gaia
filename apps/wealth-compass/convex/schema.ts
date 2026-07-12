@@ -1,13 +1,14 @@
 import { defineSchema, defineTable } from "convex/server"
 import { v } from "convex/values"
+import { authTables } from "@convex-dev/auth/server"
 
 export default defineSchema({
+  ...authTables,
   users: defineTable({
-    tokenIdentifier: v.string(),
-    name: v.string(),
-    email: v.string(),
+    name: v.optional(v.string()),
+    email: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
-  }).index("by_tokenIdentifier", ["tokenIdentifier"]),
+  }).index("by_email", ["email"]),
 
   jars: defineTable({
     userId: v.id("users"),

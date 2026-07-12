@@ -1,46 +1,18 @@
 import { query, mutation } from "./_generated/server"
 import { v } from "convex/values"
-
-const DEFAULT_JARS = [
-  { name: "NEC", color: "#EF4444", percentage: 55, icon: "Home" },
-  { name: "LTSS", color: "#3B82F6", percentage: 10, icon: "Shield" },
-  { name: "EDU", color: "#EAB308", percentage: 10, icon: "BookOpen" },
-  { name: "PLAY", color: "#A855F7", percentage: 10, icon: "Gamepad2" },
-  { name: "GIVE", color: "#22C55E", percentage: 10, icon: "Heart" },
-  { name: "FFA", color: "#F59E0B", percentage: 5, icon: "TrendingUp" },
-]
+import { getAuthUserId } from "@convex-dev/auth/server"
 
 export const getUserJars = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) return []
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier)
-      )
-      .unique()
-    if (!user) return []
+    const userId = await getAuthUserId(ctx)
+    if (!userId) return []
 
     const jars = await ctx.db
       .query("jars")
-      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
       .collect()
     return jars
-  },
-})
-
-export const createDefaultJars = mutation({
-  args: { userId: v.id("users") },
-  handler: async (ctx, args) => {
-    for (const jar of DEFAULT_JARS) {
-      await ctx.db.insert("jars", {
-        userId: args.userId,
-        ...jar,
-      })
-    }
   },
 })
 

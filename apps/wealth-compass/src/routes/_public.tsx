@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router"
+import { createFileRoute, Outlet, Link } from "@tanstack/react-router"
 import {
   Header,
   HeaderLeft,
@@ -27,7 +27,9 @@ function PublicLayout() {
     <div className="min-h-screen">
       <Header>
         <HeaderLeft>
-          <span className="text-lg font-bold">Wealth Compass</span>
+          <Link to="/" className="text-lg font-black tracking-tighter font-logo">
+            WealthCompass
+          </Link>
         </HeaderLeft>
         <HeaderNav>
           {navItems.map((item) => (
@@ -38,10 +40,14 @@ function PublicLayout() {
         </HeaderNav>
         <HeaderRight>
           <ThemeToggle />
-          <Button variant="secondary" size="sm">
-            Sign In
-          </Button>
-          <Button size="sm">Get Started</Button>
+          <Link to="/sign-in">
+            <Button variant="secondary" size="sm">
+              Sign In
+            </Button>
+          </Link>
+          <Link to="/sign-up">
+            <Button size="sm">Get Started</Button>
+          </Link>
         </HeaderRight>
         <Sheet>
           <SheetTrigger render={<HeaderMenuTrigger />}>
@@ -82,10 +88,14 @@ function PublicLayout() {
             </nav>
             <div className="flex flex-col gap-3 border-t px-4 py-6">
               <ThemeToggleFullWidth />
-              <Button variant="secondary" className="w-full">
-                Sign In
-              </Button>
-              <Button className="w-full">Get Started</Button>
+              <Link to="/sign-in" className="w-full">
+                <Button variant="secondary" className="w-full">
+                  Sign In
+                </Button>
+              </Link>
+              <Link to="/sign-up" className="w-full">
+                <Button className="w-full">Get Started</Button>
+              </Link>
             </div>
           </SheetContent>
         </Sheet>
