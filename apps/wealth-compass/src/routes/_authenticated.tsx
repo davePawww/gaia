@@ -112,7 +112,7 @@ function AuthenticatedLayout() {
                     </span>
                   </div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="start" forceMount>
+                <DropdownMenuContent className="w-56" align="start">
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">
@@ -124,7 +124,7 @@ function AuthenticatedLayout() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem render={<Link to="/settings" />}>
+                  <DropdownMenuItem render={<Link to="/dashboard" />}>
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
