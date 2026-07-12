@@ -15,7 +15,6 @@ dist-ssr
 # Convex auto-generated
 .agents
 .claude
-convex/_generated
 
 # Editor directories and files
 .vscode/*
