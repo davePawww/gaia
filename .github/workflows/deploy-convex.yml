@@ -1,0 +1,23 @@
+name: Deploy Convex
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/wealth-compass/convex/**'
+      - 'apps/wealth-compass/package.json'
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/wealth-compass
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm install
+      - run: pnpx convex deploy
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
