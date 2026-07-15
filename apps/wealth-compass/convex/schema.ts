@@ -1,4 +1,5 @@
 import { defineSchema, defineTable } from "convex/server"
+// TODO: add goal tracking tables
 import { v } from "convex/values"
 import { authTables } from "@convex-dev/auth/server"
 
