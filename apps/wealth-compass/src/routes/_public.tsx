@@ -12,6 +12,7 @@ import {
 import { ThemeToggle, ThemeToggleFullWidth } from "@gaia/ui/components/theme-toggle"
 import { Button } from "@gaia/ui/components/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@gaia/ui/components/avatar"
+import { Skeleton } from "@gaia/ui/components/skeleton"
 import {
   Sheet,
   SheetContent,
@@ -27,7 +28,7 @@ const navItems = [
 ]
 
 function PublicLayout() {
-  const { isAuthenticated } = useConvexAuth()
+  const { isLoading, isAuthenticated } = useConvexAuth()
   const currentUser = useQuery(api.users.getCurrentUser)
 
   const userInitial = currentUser?.name
@@ -51,7 +52,12 @@ function PublicLayout() {
         </HeaderNav>
         <HeaderRight>
           <ThemeToggle />
-          {isAuthenticated && currentUser ? (
+          {isLoading ? (
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-8 w-16 rounded-md" />
+              <Skeleton className="h-8 w-20 rounded-md" />
+            </div>
+          ) : isAuthenticated && currentUser ? (
             <Link to="/dashboard">
               <Avatar className="h-8 w-8 cursor-pointer">
                 <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name ?? "User"} />
@@ -110,7 +116,12 @@ function PublicLayout() {
             </nav>
             <div className="flex flex-col gap-3 border-t px-4 py-6">
               <ThemeToggleFullWidth />
-              {isAuthenticated && currentUser ? (
+              {isLoading ? (
+                <div className="flex flex-col gap-3">
+                  <Skeleton className="h-10 w-full rounded-md" />
+                  <Skeleton className="h-10 w-full rounded-md" />
+                </div>
+              ) : isAuthenticated && currentUser ? (
                 <Link to="/dashboard" className="w-full">
                   <Button variant="secondary" className="w-full gap-2">
                     <Avatar className="h-5 w-5">
