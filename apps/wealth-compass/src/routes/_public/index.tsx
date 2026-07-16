@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, Link } from "@tanstack/react-router"
+import { useConvexAuth } from "@convex-dev/auth/react"
 import { Button } from "@gaia/ui/components/button"
 import {
   Home,
@@ -77,6 +78,7 @@ const features = [
 ]
 
 function LandingPage() {
+  const { isAuthenticated } = useConvexAuth()
   return (
     <div>
       {/* Hero */}
@@ -92,10 +94,12 @@ function LandingPage() {
           your money goes - start directing it.
         </p>
         <div className="mt-8 flex gap-4">
-          <Button size="lg">
-            Get Started Free
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+          <Link to={isAuthenticated ? "/dashboard" : "/sign-up"}>
+            <Button size="lg">
+              Get Started Free
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
           <Button size="lg" variant="outline">
             See How it Works
           </Button>
@@ -156,10 +160,12 @@ function LandingPage() {
         <p className="mt-4 text-muted-foreground">
           Start building wealth today with the Money Jar System.
         </p>
-        <Button size="lg" className="mt-8">
-          Get Started Free
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
+        <Link to={isAuthenticated ? "/dashboard" : "/sign-up"}>
+          <Button size="lg" className="mt-8">
+            Get Started Free
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </Link>
       </section>
     </div>
   )
