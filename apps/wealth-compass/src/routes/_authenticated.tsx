@@ -23,6 +23,7 @@ import {
 } from "@gaia/ui/components/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@gaia/ui/components/avatar"
 import { Button } from "@gaia/ui/components/button"
+import { Skeleton } from "@gaia/ui/components/skeleton"
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -108,31 +109,43 @@ function AuthenticatedLayout() {
           </SidebarGroup>
         </SidebarContent>
         <SidebarFooter className="border-t border-sidebar-border p-4">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8">
-              <AvatarImage
-                src={convexUser?.avatarUrl}
-                alt={convexUser?.name ?? "User"}
-              />
-              <AvatarFallback>{userInitial}</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col overflow-hidden">
-              <span className="truncate text-sm font-medium">
-                {convexUser?.name ?? "Account"}
-              </span>
-              <span className="truncate text-xs text-muted-foreground">
-                {convexUser?.email ?? "user@example.com"}
-              </span>
+          {convexUser ? (
+            <>
+              <div className="flex items-center gap-3">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage
+                    src={convexUser.avatarUrl}
+                    alt={convexUser.name ?? "User"}
+                  />
+                  <AvatarFallback>{userInitial}</AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col overflow-hidden">
+                  <span className="truncate text-sm font-medium">
+                    {convexUser.name ?? "Account"}
+                  </span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {convexUser.email ?? "user@example.com"}
+                  </span>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                className="mt-3 w-full justify-start gap-2 text-muted-foreground hover:text-destructive"
+                onClick={() => signOut()}
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Sign out</span>
+              </Button>
+            </>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div className="flex flex-col gap-1.5">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-3 w-32" />
+              </div>
             </div>
-          </div>
-          <Button
-            variant="ghost"
-            className="mt-3 w-full justify-start gap-2 text-muted-foreground hover:text-destructive"
-            onClick={() => signOut()}
-          >
-            <LogOut className="h-4 w-4" />
-            <span>Sign out</span>
-          </Button>
+          )}
         </SidebarFooter>
       </Sidebar>
       <main className="flex-1 p-6">

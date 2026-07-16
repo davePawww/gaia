@@ -52,7 +52,7 @@ function PublicLayout() {
         </HeaderNav>
         <HeaderRight>
           <ThemeToggle />
-          {isLoading ? (
+          {isLoading || (isAuthenticated && !currentUser) ? (
             <div className="flex items-center gap-2">
               <Skeleton className="h-8 w-16 rounded-md" />
               <Skeleton className="h-8 w-20 rounded-md" />
@@ -116,7 +116,7 @@ function PublicLayout() {
             </nav>
             <div className="flex flex-col gap-3 border-t px-4 py-6">
               <ThemeToggleFullWidth />
-              {isLoading ? (
+              {isLoading || (isAuthenticated && !currentUser) ? (
                 <div className="flex flex-col gap-3">
                   <Skeleton className="h-10 w-full rounded-md" />
                   <Skeleton className="h-10 w-full rounded-md" />
