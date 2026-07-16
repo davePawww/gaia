@@ -14,6 +14,9 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
+import { Route as PublicHowItWorksRouteImport } from './routes/_public/how-it-works'
+import { Route as PublicFaqsRouteImport } from './routes/_public/faqs'
+import { Route as PublicAboutRouteImport } from './routes/_public/about'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 
 const SignUpRoute = SignUpRouteImport.update({
@@ -39,6 +42,21 @@ const PublicIndexRoute = PublicIndexRouteImport.update({
   path: '/',
   getParentRoute: () => PublicRoute,
 } as any)
+const PublicHowItWorksRoute = PublicHowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicFaqsRoute = PublicFaqsRouteImport.update({
+  id: '/faqs',
+  path: '/faqs',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicAboutRoute = PublicAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => PublicRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -50,12 +68,18 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/about': typeof PublicAboutRoute
+  '/faqs': typeof PublicFaqsRoute
+  '/how-it-works': typeof PublicHowItWorksRoute
 }
 export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/about': typeof PublicAboutRoute
+  '/faqs': typeof PublicFaqsRoute
+  '/how-it-works': typeof PublicHowItWorksRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -64,13 +88,30 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_public/about': typeof PublicAboutRoute
+  '/_public/faqs': typeof PublicFaqsRoute
+  '/_public/how-it-works': typeof PublicHowItWorksRoute
   '/_public/': typeof PublicIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sign-in' | '/sign-up' | '/dashboard'
+  fullPaths:
+    | '/'
+    | '/sign-in'
+    | '/sign-up'
+    | '/dashboard'
+    | '/about'
+    | '/faqs'
+    | '/how-it-works'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sign-in' | '/sign-up' | '/dashboard'
+  to:
+    | '/'
+    | '/sign-in'
+    | '/sign-up'
+    | '/dashboard'
+    | '/about'
+    | '/faqs'
+    | '/how-it-works'
   id:
     | '__root__'
     | '/_authenticated'
@@ -78,6 +119,9 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/_authenticated/dashboard'
+    | '/_public/about'
+    | '/_public/faqs'
+    | '/_public/how-it-works'
     | '/_public/'
   fileRoutesById: FileRoutesById
 }
@@ -125,6 +169,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicIndexRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/how-it-works': {
+      id: '/_public/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof PublicHowItWorksRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/faqs': {
+      id: '/_public/faqs'
+      path: '/faqs'
+      fullPath: '/faqs'
+      preLoaderRoute: typeof PublicFaqsRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/about': {
+      id: '/_public/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof PublicAboutRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -148,10 +213,16 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 )
 
 interface PublicRouteChildren {
+  PublicAboutRoute: typeof PublicAboutRoute
+  PublicFaqsRoute: typeof PublicFaqsRoute
+  PublicHowItWorksRoute: typeof PublicHowItWorksRoute
   PublicIndexRoute: typeof PublicIndexRoute
 }
 
 const PublicRouteChildren: PublicRouteChildren = {
+  PublicAboutRoute: PublicAboutRoute,
+  PublicFaqsRoute: PublicFaqsRoute,
+  PublicHowItWorksRoute: PublicHowItWorksRoute,
   PublicIndexRoute: PublicIndexRoute,
 }
 
