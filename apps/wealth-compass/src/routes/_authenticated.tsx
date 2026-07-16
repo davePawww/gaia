@@ -1,5 +1,10 @@
 import { useEffect } from "react"
-import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router"
+import {
+  createFileRoute,
+  Outlet,
+  Link,
+  useNavigate,
+} from "@tanstack/react-router"
 import { useConvexAuth, useAuthActions } from "@convex-dev/auth/react"
 import { Loader2 } from "lucide-react"
 import {
@@ -36,9 +41,7 @@ const mainNav = [
   { title: "History", url: "/history", icon: History },
 ]
 
-const secondaryNav = [
-  { title: "Settings", url: "/settings", icon: Settings },
-]
+const secondaryNav = [{ title: "Settings", url: "/settings", icon: Settings }]
 
 function AuthenticatedLayout() {
   const { isLoading, isAuthenticated } = useConvexAuth()
@@ -68,7 +71,7 @@ function AuthenticatedLayout() {
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader className="p-4">
-          <span className="text-lg font-logo font-black tracking-tighter">
+          <span className="font-logo text-lg font-black tracking-tighter">
             WealthCompass
           </span>
         </SidebarHeader>
@@ -104,17 +107,20 @@ function AuthenticatedLayout() {
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
-        <SidebarFooter className="p-4 border-t border-sidebar-border">
+        <SidebarFooter className="border-t border-sidebar-border p-4">
           <div className="flex items-center gap-3">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={convexUser?.avatarUrl} alt={convexUser?.name ?? "User"} />
+              <AvatarImage
+                src={convexUser?.avatarUrl}
+                alt={convexUser?.name ?? "User"}
+              />
               <AvatarFallback>{userInitial}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col overflow-hidden">
-              <span className="text-sm font-medium truncate">
+              <span className="truncate text-sm font-medium">
                 {convexUser?.name ?? "Account"}
               </span>
-              <span className="text-xs text-muted-foreground truncate">
+              <span className="truncate text-xs text-muted-foreground">
                 {convexUser?.email ?? "user@example.com"}
               </span>
             </div>
@@ -130,10 +136,10 @@ function AuthenticatedLayout() {
         </SidebarFooter>
       </Sidebar>
       <main className="flex-1 p-6">
-        <header className="flex items-center justify-between mb-6">
+        <header className="mb-6 flex items-center justify-between">
           <SidebarTrigger />
           <div className="flex items-center gap-4">
-             {/* User profile summary could go here if needed, but handled by sidebar footer now */}
+            {/* User profile summary could go here if needed, but handled by sidebar footer now */}
           </div>
         </header>
         <Outlet />
