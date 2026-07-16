@@ -23,6 +23,18 @@ function SignUpPage() {
     }
   }, [isLoading, isAuthenticated, navigate])
 
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (isAuthenticated) {
+    return null
+  }
+
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -45,18 +57,6 @@ function SignUpPage() {
       console.error(error)
       toast.error("Failed to sign up with Google.")
     }
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
-
-  if (isAuthenticated) {
-    return null
   }
 
   return (
