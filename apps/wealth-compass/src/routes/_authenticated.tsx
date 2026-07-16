@@ -129,8 +129,8 @@ function AuthenticatedLayout() {
                 </div>
               </div>
               <Button
-                variant="ghost"
-                className="mt-3 w-full justify-start gap-2 text-muted-foreground hover:text-destructive"
+                variant="secondary"
+                className="mt-2 w-full justify-start py-4 text-muted-foreground hover:text-destructive"
                 onClick={() => signOut()}
               >
                 <LogOut className="h-4 w-4" />
