@@ -1,19 +1,38 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useAuthActions } from "@convex-dev/auth/react"
-import { useState } from "react"
+import { useAuthActions, useConvexAuth } from "@convex-dev/auth/react"
+import { useEffect, useState } from "react"
 import { Button } from "@gaia/ui/components/button"
 import { Input } from "@gaia/ui/components/input"
 import { Label } from "@gaia/ui/components/label"
 import { Link } from "@tanstack/react-router"
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
 function SignInPage() {
   const navigate = useNavigate()
   const { signIn } = useAuthActions()
+  const { isLoading, isAuthenticated } = useConvexAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate({ to: "/dashboard" })
+    }
+  }, [isLoading, isAuthenticated, navigate])
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (isAuthenticated) {
+    return null
+  }
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
