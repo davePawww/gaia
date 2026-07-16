@@ -1,5 +1,7 @@
-import { createFileRoute, Outlet, Link } from "@tanstack/react-router"
-import { useAuthActions } from "@convex-dev/auth/react"
+import { useEffect } from "react"
+import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router"
+import { useConvexAuth, useAuthActions } from "@convex-dev/auth/react"
+import { Loader2 } from "lucide-react"
 import {
   SidebarProvider,
   Sidebar,
@@ -47,12 +49,28 @@ const secondaryNav = [
 ]
 
 function AuthenticatedLayout() {
+  const { isLoading, isAuthenticated } = useConvexAuth()
   const { signOut } = useAuthActions()
+  const navigate = useNavigate()
   const convexUser = useQuery(api.users.getCurrentUser)
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate({ to: "/sign-in" })
+    }
+  }, [isLoading, isAuthenticated, navigate])
 
   const userInitial = convexUser?.name
     ? convexUser.name.charAt(0).toUpperCase()
     : "U"
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
   return (
     <SidebarProvider>
