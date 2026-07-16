@@ -16,15 +16,8 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@gaia/ui/components/sidebar"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@gaia/ui/components/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@gaia/ui/components/avatar"
+import { Button } from "@gaia/ui/components/button"
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -32,7 +25,6 @@ import {
   History,
   Settings,
   LogOut,
-  User,
 } from "lucide-react"
 import { useQuery } from "convex/react"
 import { api } from "../../convex/_generated/api"
@@ -113,48 +105,28 @@ function AuthenticatedLayout() {
           </SidebarGroup>
         </SidebarContent>
         <SidebarFooter className="p-4 border-t border-sidebar-border">
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <DropdownMenu>
-                <DropdownMenuTrigger render={<SidebarMenuButton />}>
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={undefined} alt="User" />
-                    <AvatarFallback>{userInitial}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col items-start text-left overflow-hidden">
-                    <span className="text-sm font-medium truncate">
-                      {convexUser?.name ?? "Account"}
-                    </span>
-                    <span className="text-xs text-muted-foreground truncate">
-                      {convexUser?.email ?? "user@example.com"}
-                    </span>
-                  </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="start">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        {convexUser?.name ?? "User"}
-                      </p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {convexUser?.email ?? "user@example.com"}
-                      </p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem render={<Link to="/dashboard" />}>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => signOut()}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Sign out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </SidebarMenuItem>
-          </SidebarMenu>
+          <div className="flex items-center gap-3">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={convexUser?.avatarUrl} alt={convexUser?.name ?? "User"} />
+              <AvatarFallback>{userInitial}</AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col overflow-hidden">
+              <span className="text-sm font-medium truncate">
+                {convexUser?.name ?? "Account"}
+              </span>
+              <span className="text-xs text-muted-foreground truncate">
+                {convexUser?.email ?? "user@example.com"}
+              </span>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            className="mt-3 w-full justify-start gap-2 text-muted-foreground hover:text-destructive"
+            onClick={() => signOut()}
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Sign out</span>
+          </Button>
         </SidebarFooter>
       </Sidebar>
       <main className="flex-1 p-6">
