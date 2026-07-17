@@ -232,7 +232,7 @@ function DashboardPage() {
             </CardHeader>
             <CardContent>
               {chartData.some((d) => d.value > 0) ? (
-                <ChartContainer config={chartConfig} className="h-[200px] w-full">
+                <ChartContainer config={chartConfig} className="h-[250px] w-full">
                   <PieChart>
                     <ChartTooltip
                       content={
@@ -248,7 +248,7 @@ function DashboardPage() {
                       nameKey="name"
                       cx="50%"
                       cy="50%"
-                      outerRadius={80}
+                      outerRadius={65}
                       strokeWidth={2}
                       label={({ name, percent }: { name?: string; percent?: number }) =>
                         `${name ?? ""} ${((percent ?? 0) * 100).toFixed(0)}%`
@@ -262,7 +262,7 @@ function DashboardPage() {
                   </PieChart>
                 </ChartContainer>
               ) : (
-                <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">
+                <div className="flex h-[250px] items-center justify-center text-sm text-muted-foreground">
                   No data yet
                 </div>
               )}
