@@ -78,11 +78,11 @@ function FaqsPage() {
         <div className="mx-auto max-w-2xl space-y-4">
           {faqs.map((faq) => (
             <Collapsible key={faq.question}>
-              <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border bg-background p-4 text-left font-medium shadow-sm hover:bg-accent transition-colors">
+              <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border bg-background p-4 text-left font-medium shadow-sm transition-colors hover:bg-accent">
                 {faq.question}
                 <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform [&[data-state=open]]:rotate-180" />
               </CollapsibleTrigger>
-              <CollapsibleContent className="rounded-b-lg border border-t-0 bg-background px-4 pb-4 text-sm text-muted-foreground leading-relaxed">
+              <CollapsibleContent className="rounded-b-lg border border-t-0 bg-background px-4 pt-4 pb-4 text-sm leading-relaxed text-muted-foreground">
                 {faq.answer}
               </CollapsibleContent>
             </Collapsible>

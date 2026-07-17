@@ -60,7 +60,7 @@ function PublicLayout() {
           ) : isAuthenticated && currentUser ? (
             <Link to="/dashboard">
               <Avatar className="h-8 w-8 cursor-pointer">
-                <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name ?? "User"} />
+                <AvatarImage src={currentUser.image} alt={currentUser.name ?? "User"} />
                 <AvatarFallback>{userInitial}</AvatarFallback>
               </Avatar>
             </Link>
@@ -125,7 +125,7 @@ function PublicLayout() {
                 <Link to="/dashboard" className="w-full">
                   <Button variant="secondary" className="w-full gap-2">
                     <Avatar className="h-5 w-5">
-                      <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name ?? "User"} />
+                      <AvatarImage src={currentUser.image} alt={currentUser.name ?? "User"} />
                       <AvatarFallback className="text-xs">{userInitial}</AvatarFallback>
                     </Avatar>
                     Dashboard

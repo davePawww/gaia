@@ -114,7 +114,7 @@ function AuthenticatedLayout() {
               <div className="flex items-center gap-3">
                 <Avatar className="h-8 w-8">
                   <AvatarImage
-                    src={convexUser.avatarUrl}
+                    src={convexUser.image}
                     alt={convexUser.name ?? "User"}
                   />
                   <AvatarFallback>{userInitial}</AvatarFallback>
