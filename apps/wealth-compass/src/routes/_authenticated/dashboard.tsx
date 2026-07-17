@@ -1,5 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { Card, CardContent, CardHeader, CardTitle } from "@gaia/ui/components/card"
+import { useQuery } from "convex/react"
+import { api } from "../../../convex/_generated/api"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@gaia/ui/components/card"
 import { Button } from "@gaia/ui/components/button"
 import { Badge } from "@gaia/ui/components/badge"
 import {
@@ -9,6 +16,7 @@ import {
   type ChartConfig,
 } from "@gaia/ui/components/chart"
 import { PieChart, Pie, Cell } from "recharts"
+import { Skeleton } from "@gaia/ui/components/skeleton"
 import {
   Wallet,
   ArrowLeftRight,
@@ -20,9 +28,9 @@ import {
 } from "lucide-react"
 import { JarCard } from "@wealth-compass/components/jar-card"
 import { CurrencySelector } from "@wealth-compass/components/currency-selector"
+import { AllocateIncomeDialog } from "@wealth-compass/components/allocate-income-dialog"
 import { useCurrency } from "@wealth-compass/lib/use-currency"
 import { formatCurrency } from "@wealth-compass/lib/currency"
-import type { Doc, Id } from "../../../convex/_generated/dataModel"
 
 const JAR_COLORS: Record<string, string> = {
   NEC: "#EF4444",
@@ -33,83 +41,47 @@ const JAR_COLORS: Record<string, string> = {
   FFA: "#F59E0B",
 }
 
-// TODO: Remove mock data once real data is available
-const MOCK_JARS: Doc<"jars">[] = [
-  { _id: "mock-nec" as Id<"jars">, _creationTime: 0, name: "NEC", color: "#EF4444", percentage: 55, icon: "Home", userId: "mock" as Id<"users"> },
-  { _id: "mock-ltss" as Id<"jars">, _creationTime: 0, name: "LTSS", color: "#3B82F6", percentage: 10, icon: "Shield", userId: "mock" as Id<"users"> },
-  { _id: "mock-edu" as Id<"jars">, _creationTime: 0, name: "EDU", color: "#EAB308", percentage: 10, icon: "BookOpen", userId: "mock" as Id<"users"> },
-  { _id: "mock-play" as Id<"jars">, _creationTime: 0, name: "PLAY", color: "#A855F7", percentage: 10, icon: "Gamepad2", userId: "mock" as Id<"users"> },
-  { _id: "mock-give" as Id<"jars">, _creationTime: 0, name: "GIVE", color: "#22C55E", percentage: 10, icon: "Heart", userId: "mock" as Id<"users"> },
-  { _id: "mock-ffa" as Id<"jars">, _creationTime: 0, name: "FFA", color: "#F59E0B", percentage: 5, icon: "TrendingUp", userId: "mock" as Id<"users"> },
-]
-
-const MOCK_BALANCES: Record<string, number> = {
-  NEC: 2750,
-  LTSS: 500,
-  EDU: 320,
-  PLAY: 480,
-  GIVE: 250,
-  FFA: 175,
-}
-
-const MOCK_TRANSACTIONS: Doc<"transactions">[] = [
-  { _id: "t1" as Id<"transactions">, _creationTime: 0, type: "income", amount: 5000, toJarId: "mock-nec" as Id<"jars">, fromJarId: undefined, note: "Monthly salary", createdAt: Date.now() - 86400000 * 2, userId: "mock" as Id<"users"> },
-  { _id: "t2" as Id<"transactions">, _creationTime: 0, type: "withdrawal", amount: 120, fromJarId: "mock-nec" as Id<"jars">, toJarId: undefined, note: "Groceries", createdAt: Date.now() - 86400000 * 3, userId: "mock" as Id<"users"> },
-  { _id: "t3" as Id<"transactions">, _creationTime: 0, type: "transfer", amount: 50, fromJarId: "mock-play" as Id<"jars">, toJarId: "mock-edu" as Id<"jars">, note: "Online course", createdAt: Date.now() - 86400000 * 5, userId: "mock" as Id<"users"> },
-  { _id: "t4" as Id<"transactions">, _creationTime: 0, type: "withdrawal", amount: 65, fromJarId: "mock-nec" as Id<"jars">, toJarId: undefined, note: "Electric bill", createdAt: Date.now() - 86400000 * 7, userId: "mock" as Id<"users"> },
-  { _id: "t5" as Id<"transactions">, _creationTime: 0, type: "income", amount: 800, toJarId: "mock-ffa" as Id<"jars">, fromJarId: undefined, note: "Freelance project", createdAt: Date.now() - 86400000 * 10, userId: "mock" as Id<"users"> },
-]
-
 function DashboardPage() {
   const { currency } = useCurrency()
+  const jarBalances = useQuery(api.jars.getJarBalances)
+  const transactions = useQuery(api.transactions.getUserTransactions)
 
-  // TODO: Replace with real Convex queries
-  // const jars = useQuery(api.jars.getUserJars)
-  // const transactions = useQuery(api.transactions.getUserTransactions)
-  const jars = MOCK_JARS
-  const transactions = MOCK_TRANSACTIONS
-
-  const jarBalances = MOCK_JARS.map((jar) => ({
-    jar,
-    balance: MOCK_BALANCES[jar.name] ?? 0,
-  }))
+  const isLoading = jarBalances === undefined || transactions === undefined
 
   const totalNetWorth =
-    jarBalances.reduce((sum, jb) => sum + jb.balance, 0)
+    jarBalances?.reduce((sum, jb) => sum + jb.balance, 0) ?? 0
 
   const totalRecentIncome =
-    jarBalances.reduce((sum, jb) => {
+    jarBalances?.reduce((sum, jb) => {
       const income =
         transactions
-          .filter(
-            (t) =>
-              t.type === "income" && t.toJarId === jb.jar._id
-          )
-          .reduce((s, t) => s + t.amount, 0)
+          ?.filter((t) => t.type === "income" && t.toJarId === jb.jar._id)
+          .reduce((s, t) => s + t.amount, 0) ?? 0
       return sum + income
-    }, 0)
+    }, 0) ?? 0
 
   const chartData =
-    jarBalances.map((jb) => ({
+    jarBalances?.map((jb) => ({
       name: jb.jar.name,
       value: jb.balance,
       fill: JAR_COLORS[jb.jar.name] ?? jb.jar.color,
-    }))
+    })) ?? []
 
   const chartConfig: ChartConfig = Object.fromEntries(
     Object.entries(JAR_COLORS).map(([name, color]) => [
       name,
       { label: name, color },
-    ])
+    ]),
   )
 
-  const recentTransactions = transactions
-    .slice()
-    .sort((a, b) => b.createdAt - a.createdAt)
-    .slice(0, 5)
+  const recentTransactions =
+    transactions
+      ?.slice()
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, 5) ?? []
 
   const getJarName = (jarId?: string) =>
-    jars.find((j) => j._id === jarId)?.name ?? "N/A"
+    jarBalances?.find((jb) => jb.jar._id === jarId)?.jar.name ?? "N/A"
 
   return (
     <div className="space-y-6">
@@ -117,10 +89,12 @@ function DashboardPage() {
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <div className="flex flex-wrap items-center gap-2">
           <CurrencySelector />
-          <Button size="sm">
-            <Plus className="mr-1 h-4 w-4" />
-            Allocate Income
-          </Button>
+          <AllocateIncomeDialog currency={currency}>
+            <Button size="sm">
+              <Plus className="mr-1 h-4 w-4" />
+              Allocate Income
+            </Button>
+          </AllocateIncomeDialog>
           <Button size="sm" variant="outline">
             <ArrowRightLeft className="mr-1 h-4 w-4" />
             Transfer
@@ -132,77 +106,97 @@ function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Net Worth</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(totalNetWorth, currency)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Across {jars.length} jars
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Allocated
-            </CardTitle>
-            <Wallet className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(totalRecentIncome, currency)}
-            </div>
-            <p className="text-xs text-muted-foreground">Lifetime income</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Transactions</CardTitle>
-            <ArrowLeftRight className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{transactions.length}</div>
-            <p className="text-xs text-muted-foreground">All time</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Largest Jar
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {jarBalances.length > 0 ? (
-              <>
-                <div className="text-2xl font-bold">
-                  {
-                    jarBalances.reduce((max, jb) =>
-                      jb.balance > max.balance ? jb : max
-                    ).jar.name
-                  }
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {formatCurrency(
-                    jarBalances.reduce((max, jb) =>
-                      jb.balance > max.balance ? jb : max
-                    ).balance,
-                    currency
-                  )}
-                </p>
-              </>
-            ) : (
-              <div className="text-2xl font-bold">-</div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      {isLoading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-4" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-20" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Net Worth</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {formatCurrency(totalNetWorth, currency)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Across {jarBalances?.length ?? 0} jars
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">
+                Total Allocated
+              </CardTitle>
+              <Wallet className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {formatCurrency(totalRecentIncome, currency)}
+              </div>
+              <p className="text-xs text-muted-foreground">Lifetime income</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">
+                Transactions
+              </CardTitle>
+              <ArrowLeftRight className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {transactions?.length ?? 0}
+              </div>
+              <p className="text-xs text-muted-foreground">All time</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">
+                Largest Jar
+              </CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {jarBalances && jarBalances.length > 0 ? (
+                <>
+                  <div className="text-2xl font-bold">
+                    {
+                      jarBalances.reduce((max, jb) =>
+                        jb.balance > max.balance ? jb : max,
+                      ).jar.name
+                    }
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {formatCurrency(
+                      jarBalances.reduce((max, jb) =>
+                        jb.balance > max.balance ? jb : max,
+                      ).balance,
+                      currency,
+                    )}
+                  </p>
+                </>
+              ) : (
+                <div className="text-2xl font-bold">-</div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -211,16 +205,28 @@ function DashboardPage() {
               <CardTitle className="text-lg">Your Jars</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {jarBalances.map((jb) => (
-                  <JarCard
-                    key={jb.jar._id}
-                    jar={jb.jar}
-                    balance={jb.balance}
-                    recentIncome={totalRecentIncome}
-                  />
-                ))}
-              </div>
+              {isLoading ? (
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <Skeleton key={i} className="h-32 rounded-xl" />
+                  ))}
+                </div>
+              ) : jarBalances && jarBalances.length > 0 ? (
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {jarBalances.map((jb) => (
+                    <JarCard
+                      key={jb.jar._id}
+                      jar={jb.jar}
+                      balance={jb.balance}
+                      recentIncome={totalRecentIncome}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No jars found. Allocate your first income to get started.
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -231,14 +237,21 @@ function DashboardPage() {
               <CardTitle className="text-lg">Distribution</CardTitle>
             </CardHeader>
             <CardContent>
-              {chartData.some((d) => d.value > 0) ? (
-                <ChartContainer config={chartConfig} className="h-[250px] w-full">
+              {isLoading ? (
+                <Skeleton className="h-[250px] w-full rounded-xl" />
+              ) : chartData.some((d) => d.value > 0) ? (
+                <ChartContainer
+                  config={chartConfig}
+                  className="h-[250px] w-full"
+                >
                   <PieChart>
                     <ChartTooltip
                       content={
                         <ChartTooltipContent
                           nameKey="name"
-                          formatter={(value) => formatCurrency(Number(value), currency)}
+                          formatter={(value) =>
+                            formatCurrency(Number(value), currency)
+                          }
                         />
                       }
                     />
@@ -250,9 +263,13 @@ function DashboardPage() {
                       cy="50%"
                       outerRadius={65}
                       strokeWidth={2}
-                      label={({ name, percent }: { name?: string; percent?: number }) =>
-                        `${name ?? ""} ${((percent ?? 0) * 100).toFixed(0)}%`
-                      }
+                      label={({
+                        name,
+                        percent,
+                      }: {
+                        name?: string
+                        percent?: number
+                      }) => `${name ?? ""} ${((percent ?? 0) * 100).toFixed(0)}%`}
                       labelLine={false}
                     >
                       {chartData.map((entry) => (
@@ -263,7 +280,7 @@ function DashboardPage() {
                 </ChartContainer>
               ) : (
                 <div className="flex h-[250px] items-center justify-center text-sm text-muted-foreground">
-                  No data yet
+                  No data yet. Allocate your first income!
                 </div>
               )}
             </CardContent>
@@ -274,7 +291,16 @@ function DashboardPage() {
               <CardTitle className="text-lg">Recent Activity</CardTitle>
             </CardHeader>
             <CardContent>
-              {recentTransactions.length > 0 ? (
+              {isLoading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex items-center justify-between">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-5 w-16" />
+                    </div>
+                  ))}
+                </div>
+              ) : recentTransactions.length > 0 ? (
                 <div className="space-y-3">
                   {recentTransactions.map((t) => (
                     <div
@@ -305,7 +331,7 @@ function DashboardPage() {
                           )}
                           {t.type === "transfer" && (
                             <span className="ml-1 text-muted-foreground">
-                              {getJarName(t.fromJarId)} →{" "}
+                              {getJarName(t.fromJarId)} &rarr;{" "}
                               {getJarName(t.toJarId)}
                             </span>
                           )}
