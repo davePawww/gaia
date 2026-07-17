@@ -13,7 +13,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@wealth-compass": path.resolve(__dirname, "src"),
-      "@gaia/ui": path.resolve(__dirname, "../../packages/ui/src"),
     },
   },
 })
