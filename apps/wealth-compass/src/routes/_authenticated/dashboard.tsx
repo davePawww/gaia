@@ -29,6 +29,8 @@ import {
 import { JarCard } from "@wealth-compass/components/jar-card"
 import { CurrencySelector } from "@wealth-compass/components/currency-selector"
 import { AllocateIncomeDialog } from "@wealth-compass/components/allocate-income-dialog"
+import { WithdrawDialog } from "@wealth-compass/components/withdraw-dialog"
+import { TransferDialog } from "@wealth-compass/components/transfer-dialog"
 import { useCurrency } from "@wealth-compass/lib/use-currency"
 import { formatCurrency } from "@wealth-compass/lib/currency"
 
@@ -95,14 +97,18 @@ function DashboardPage() {
               Allocate Income
             </Button>
           </AllocateIncomeDialog>
-          <Button size="sm" variant="outline">
-            <ArrowRightLeft className="mr-1 h-4 w-4" />
-            Transfer
-          </Button>
-          <Button size="sm" variant="outline">
-            <ArrowUpRight className="mr-1 h-4 w-4" />
-            Withdraw
-          </Button>
+          <TransferDialog currency={currency}>
+            <Button size="sm" variant="outline">
+              <ArrowRightLeft className="mr-1 h-4 w-4" />
+              Transfer
+            </Button>
+          </TransferDialog>
+          <WithdrawDialog currency={currency}>
+            <Button size="sm" variant="outline">
+              <ArrowUpRight className="mr-1 h-4 w-4" />
+              Withdraw
+            </Button>
+          </WithdrawDialog>
         </div>
       </div>
 
