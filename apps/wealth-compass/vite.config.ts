@@ -1,3 +1,4 @@
+import path from "path"
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
@@ -11,7 +12,8 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@wealth-compass": "/src",
+      "@wealth-compass": path.resolve(__dirname, "src"),
+      "@gaia/ui": path.resolve(__dirname, "../../packages/ui/src"),
     },
   },
 })
