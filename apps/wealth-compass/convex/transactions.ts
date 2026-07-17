@@ -21,7 +21,10 @@ export const allocateIncome = mutation({
     if (jars.length === 0) throw new Error("No jars found")
 
     if (args.overrides) {
-      const totalOverride = Object.values(args.overrides).reduce((sum, pct) => sum + pct, 0)
+      const totalOverride = Object.values(args.overrides).reduce(
+        (sum, pct) => sum + pct,
+        0,
+      )
       if (Math.abs(totalOverride - 100) > 0.01) {
         throw new Error("Override percentages must sum to 100")
       }
@@ -41,6 +44,112 @@ export const allocateIncome = mutation({
         createdAt: now,
       })
     }
+
+    return { success: true }
+  },
+})
+
+export const withdraw = mutation({
+  args: {
+    jarId: v.id("jars"),
+    amount: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx)
+    if (!userId) throw new Error("Not authenticated")
+
+    if (args.amount <= 0) throw new Error("Amount must be positive")
+
+    const jar = await ctx.db.get(args.jarId)
+    if (!jar || jar.userId !== userId) throw new Error("Jar not found")
+
+    const transactions = await ctx.db
+      .query("transactions")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect()
+
+    let balance = 0
+    for (const tx of transactions) {
+      if (tx.type === "income" && tx.toJarId === args.jarId) {
+        balance += tx.amount
+      } else if (tx.type === "withdrawal" && tx.fromJarId === args.jarId) {
+        balance -= tx.amount
+      } else if (tx.type === "transfer") {
+        if (tx.fromJarId === args.jarId) balance -= tx.amount
+        if (tx.toJarId === args.jarId) balance += tx.amount
+      }
+    }
+
+    if (balance < args.amount) {
+      throw new Error(
+        `Insufficient balance. Available: ${balance}, requested: ${args.amount}`,
+      )
+    }
+
+    await ctx.db.insert("transactions", {
+      userId,
+      type: "withdrawal",
+      amount: args.amount,
+      fromJarId: args.jarId,
+      createdAt: Date.now(),
+    })
+
+    return { success: true }
+  },
+})
+
+export const transfer = mutation({
+  args: {
+    fromJarId: v.id("jars"),
+    toJarId: v.id("jars"),
+    amount: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx)
+    if (!userId) throw new Error("Not authenticated")
+
+    if (args.amount <= 0) throw new Error("Amount must be positive")
+    if (args.fromJarId === args.toJarId)
+      throw new Error("Cannot transfer to the same jar")
+
+    const fromJar = await ctx.db.get(args.fromJarId)
+    const toJar = await ctx.db.get(args.toJarId)
+    if (!fromJar || fromJar.userId !== userId)
+      throw new Error("Source jar not found")
+    if (!toJar || toJar.userId !== userId)
+      throw new Error("Destination jar not found")
+
+    const transactions = await ctx.db
+      .query("transactions")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect()
+
+    let balance = 0
+    for (const tx of transactions) {
+      if (tx.type === "income" && tx.toJarId === args.fromJarId) {
+        balance += tx.amount
+      } else if (tx.type === "withdrawal" && tx.fromJarId === args.fromJarId) {
+        balance -= tx.amount
+      } else if (tx.type === "transfer") {
+        if (tx.fromJarId === args.fromJarId) balance -= tx.amount
+        if (tx.toJarId === args.fromJarId) balance += tx.amount
+      }
+    }
+
+    if (balance < args.amount) {
+      throw new Error(
+        `Insufficient balance in source jar. Available: ${balance}, requested: ${args.amount}`,
+      )
+    }
+
+    await ctx.db.insert("transactions", {
+      userId,
+      type: "transfer",
+      amount: args.amount,
+      fromJarId: args.fromJarId,
+      toJarId: args.toJarId,
+      createdAt: Date.now(),
+    })
 
     return { success: true }
   },
