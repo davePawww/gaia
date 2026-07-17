@@ -12,10 +12,11 @@ import {
   Gamepad2,
   Heart,
   TrendingUp,
+  type LucideIcon,
 } from "lucide-react"
 import type { Doc } from "../../convex/_generated/dataModel"
 
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+const iconMap: Record<string, LucideIcon> = {
   Home,
   Shield,
   BookOpen,

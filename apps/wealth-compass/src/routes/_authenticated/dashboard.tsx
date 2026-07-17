@@ -22,6 +22,7 @@ import { JarCard } from "@wealth-compass/components/jar-card"
 import { CurrencySelector } from "@wealth-compass/components/currency-selector"
 import { useCurrency } from "@wealth-compass/lib/use-currency"
 import { formatCurrency } from "@wealth-compass/lib/currency"
+import type { Doc, Id } from "../../../convex/_generated/dataModel"
 
 const JAR_COLORS: Record<string, string> = {
   NEC: "#EF4444",
@@ -33,13 +34,13 @@ const JAR_COLORS: Record<string, string> = {
 }
 
 // TODO: Remove mock data once real data is available
-const MOCK_JARS = [
-  { _id: "mock-nec" as never, name: "NEC", color: "#EF4444", percentage: 55, icon: "Home", userId: "mock" as never },
-  { _id: "mock-ltss" as never, name: "LTSS", color: "#3B82F6", percentage: 10, icon: "Shield", userId: "mock" as never },
-  { _id: "mock-edu" as never, name: "EDU", color: "#EAB308", percentage: 10, icon: "BookOpen", userId: "mock" as never },
-  { _id: "mock-play" as never, name: "PLAY", color: "#A855F7", percentage: 10, icon: "Gamepad2", userId: "mock" as never },
-  { _id: "mock-give" as never, name: "GIVE", color: "#22C55E", percentage: 10, icon: "Heart", userId: "mock" as never },
-  { _id: "mock-ffa" as never, name: "FFA", color: "#F59E0B", percentage: 5, icon: "TrendingUp", userId: "mock" as never },
+const MOCK_JARS: Doc<"jars">[] = [
+  { _id: "mock-nec" as Id<"jars">, _creationTime: 0, name: "NEC", color: "#EF4444", percentage: 55, icon: "Home", userId: "mock" as Id<"users"> },
+  { _id: "mock-ltss" as Id<"jars">, _creationTime: 0, name: "LTSS", color: "#3B82F6", percentage: 10, icon: "Shield", userId: "mock" as Id<"users"> },
+  { _id: "mock-edu" as Id<"jars">, _creationTime: 0, name: "EDU", color: "#EAB308", percentage: 10, icon: "BookOpen", userId: "mock" as Id<"users"> },
+  { _id: "mock-play" as Id<"jars">, _creationTime: 0, name: "PLAY", color: "#A855F7", percentage: 10, icon: "Gamepad2", userId: "mock" as Id<"users"> },
+  { _id: "mock-give" as Id<"jars">, _creationTime: 0, name: "GIVE", color: "#22C55E", percentage: 10, icon: "Heart", userId: "mock" as Id<"users"> },
+  { _id: "mock-ffa" as Id<"jars">, _creationTime: 0, name: "FFA", color: "#F59E0B", percentage: 5, icon: "TrendingUp", userId: "mock" as Id<"users"> },
 ]
 
 const MOCK_BALANCES: Record<string, number> = {
@@ -51,12 +52,12 @@ const MOCK_BALANCES: Record<string, number> = {
   FFA: 175,
 }
 
-const MOCK_TRANSACTIONS = [
-  { _id: "t1" as never, type: "income" as const, amount: 5000, toJarId: "mock-nec" as never, fromJarId: undefined, note: "Monthly salary", createdAt: Date.now() - 86400000 * 2 },
-  { _id: "t2" as never, type: "withdrawal" as const, amount: 120, fromJarId: "mock-nec" as never, toJarId: undefined, note: "Groceries", createdAt: Date.now() - 86400000 * 3 },
-  { _id: "t3" as never, type: "transfer" as const, amount: 50, fromJarId: "mock-play" as never, toJarId: "mock-edu" as never, note: "Online course", createdAt: Date.now() - 86400000 * 5 },
-  { _id: "t4" as never, type: "withdrawal" as const, amount: 65, fromJarId: "mock-nec" as never, toJarId: undefined, note: "Electric bill", createdAt: Date.now() - 86400000 * 7 },
-  { _id: "t5" as never, type: "income" as const, amount: 800, toJarId: "mock-ffa" as never, fromJarId: undefined, note: "Freelance project", createdAt: Date.now() - 86400000 * 10 },
+const MOCK_TRANSACTIONS: Doc<"transactions">[] = [
+  { _id: "t1" as Id<"transactions">, _creationTime: 0, type: "income", amount: 5000, toJarId: "mock-nec" as Id<"jars">, fromJarId: undefined, note: "Monthly salary", createdAt: Date.now() - 86400000 * 2, userId: "mock" as Id<"users"> },
+  { _id: "t2" as Id<"transactions">, _creationTime: 0, type: "withdrawal", amount: 120, fromJarId: "mock-nec" as Id<"jars">, toJarId: undefined, note: "Groceries", createdAt: Date.now() - 86400000 * 3, userId: "mock" as Id<"users"> },
+  { _id: "t3" as Id<"transactions">, _creationTime: 0, type: "transfer", amount: 50, fromJarId: "mock-play" as Id<"jars">, toJarId: "mock-edu" as Id<"jars">, note: "Online course", createdAt: Date.now() - 86400000 * 5, userId: "mock" as Id<"users"> },
+  { _id: "t4" as Id<"transactions">, _creationTime: 0, type: "withdrawal", amount: 65, fromJarId: "mock-nec" as Id<"jars">, toJarId: undefined, note: "Electric bill", createdAt: Date.now() - 86400000 * 7, userId: "mock" as Id<"users"> },
+  { _id: "t5" as Id<"transactions">, _creationTime: 0, type: "income", amount: 800, toJarId: "mock-ffa" as Id<"jars">, fromJarId: undefined, note: "Freelance project", createdAt: Date.now() - 86400000 * 10, userId: "mock" as Id<"users"> },
 ]
 
 function DashboardPage() {
@@ -249,8 +250,8 @@ function DashboardPage() {
                       cy="50%"
                       outerRadius={80}
                       strokeWidth={2}
-                      label={({ name, percent }) =>
-                        `${name} ${(percent * 100).toFixed(0)}%`
+                      label={({ name, percent }: { name?: string; percent?: number }) =>
+                        `${name ?? ""} ${((percent ?? 0) * 100).toFixed(0)}%`
                       }
                       labelLine={false}
                     >
