@@ -12,7 +12,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@wealth-compass": "/src",
-      "@gaia/ui": "../../packages/ui/src",
     },
   },
 })
