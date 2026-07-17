@@ -25,7 +25,8 @@
 
     /* Path aliases */
     "paths": {
-      "@wealth-compass/*": ["./src/*"]
+      "@wealth-compass/*": ["./src/*"],
+      "@gaia/ui/*": ["../../packages/ui/src/*"]
     }
   },
   "include": ["src"]
