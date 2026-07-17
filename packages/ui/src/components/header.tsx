@@ -1,6 +1,7 @@
 import * as React from "react"
 
-import { Button, buttonVariants } from "@gaia/ui/components/button"
+import { Button } from "@gaia/ui/components/button"
+import { buttonVariants } from "@gaia/ui/components/button-variants"
 import {
   Sheet,
   SheetContent,
