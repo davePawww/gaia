@@ -12,6 +12,7 @@ import type * as auth from "../auth.js";
 import type * as constants from "../constants.js";
 import type * as http from "../http.js";
 import type * as jars from "../jars.js";
+import type * as transactions from "../transactions.js";
 import type * as users from "../users.js";
 
 import type {
@@ -25,6 +26,7 @@ declare const fullApi: ApiFromModules<{
   constants: typeof constants;
   http: typeof http;
   jars: typeof jars;
+  transactions: typeof transactions;
   users: typeof users;
 }>;
 
