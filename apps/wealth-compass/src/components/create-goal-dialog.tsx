@@ -21,7 +21,13 @@ import {
   SelectValue,
 } from "@gaia/ui/components/select"
 import { toast } from "sonner"
+import { JAR_FULL_NAMES } from "../../convex/constants"
 import type { CurrencyCode } from "@wealth-compass/lib/currency"
+
+const GOAL_TYPE_LABELS: Record<string, string> = {
+  netWorth: "Net Worth Target",
+  jar: "Jar Savings Target",
+}
 
 interface CreateGoalDialogProps {
   currency: CurrencyCode
@@ -109,7 +115,9 @@ export function CreateGoalDialog({ currency: _currency, children }: CreateGoalDi
               onValueChange={(v) => setType(v as "jar" | "netWorth")}
             >
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <SelectValue>
+                  {GOAL_TYPE_LABELS[type] ?? "Select type"}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="netWorth">Net Worth Target</SelectItem>
@@ -123,7 +131,9 @@ export function CreateGoalDialog({ currency: _currency, children }: CreateGoalDi
               <Label>Select Jar</Label>
               <Select value={jarId} onValueChange={setJarId}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Choose a jar" />
+                  <SelectValue>
+                    {jarId ? (JAR_FULL_NAMES[jars?.find((j) => j._id === jarId)?.name ?? ""] ?? "Select jar") : "Choose a jar"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {jars?.map((jar) => (
@@ -133,7 +143,7 @@ export function CreateGoalDialog({ currency: _currency, children }: CreateGoalDi
                           className="h-2 w-2 rounded-full"
                           style={{ backgroundColor: jar.color }}
                         />
-                        {jar.name}
+                        {JAR_FULL_NAMES[jar.name] ?? jar.name}
                       </div>
                     </SelectItem>
                   ))}

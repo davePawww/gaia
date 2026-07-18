@@ -72,3 +72,27 @@ export const updateJar = mutation({
     await ctx.db.patch(jarId, updates)
   },
 })
+
+export const updateAllJarPercentages = mutation({
+  args: {
+    percentages: v.record(v.string(), v.number()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx)
+    if (!userId) throw new Error("Not authenticated")
+
+    const jars = await ctx.db
+      .query("jars")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect()
+
+    for (const jar of jars) {
+      const percentage = args.percentages[jar.name]
+      if (percentage !== undefined) {
+        await ctx.db.patch(jar._id, { percentage })
+      }
+    }
+
+    return { success: true }
+  },
+})

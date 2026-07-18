@@ -17,6 +17,7 @@ import { toast } from "sonner"
 import { useTheme } from "@gaia/ui/lib/theme-provider"
 import { useCurrency } from "@wealth-compass/lib/use-currency"
 import { CurrencySelector } from "@wealth-compass/components/currency-selector"
+import { PERSONALITY_PRESETS } from "../../../convex/constants"
 import { useState, useEffect } from "react"
 
 function SettingsPage() {
@@ -24,9 +25,19 @@ function SettingsPage() {
   useCurrency()
   const jars = useQuery(api.jars.getUserJars)
   const updateJar = useMutation(api.jars.updateJar)
+  const updateAllJarPercentages = useMutation(api.jars.updateAllJarPercentages)
   const user = useQuery(api.users.getCurrentUser)
 
   const isLoading = jars === undefined || user === undefined
+
+  const handlePresetSelect = async (preset: (typeof PERSONALITY_PRESETS)[number]) => {
+    try {
+      await updateAllJarPercentages({ percentages: preset.percentages })
+      toast.success(`Applied "${preset.name}" preset`)
+    } catch {
+      toast.error("Failed to apply preset")
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -52,6 +63,34 @@ function SettingsPage() {
               <div className="space-y-2">
                 <Label>Email</Label>
                 <Input value={user?.email ?? ""} disabled />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Money Personality</CardTitle>
+              <CardDescription>
+                Choose a preset allocation based on your money personality
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {PERSONALITY_PRESETS.map((preset) => (
+                  <button
+                    key={preset.name}
+                    onClick={() => handlePresetSelect(preset)}
+                    className="flex flex-col items-start rounded-lg border p-4 text-left transition-colors hover:bg-accent"
+                  >
+                    <span className="font-medium">{preset.name}</span>
+                    <span className="mt-1 text-xs text-muted-foreground">
+                      {preset.description}
+                    </span>
+                    <span className="mt-2 text-xs text-muted-foreground">
+                      NEC {preset.percentages.NEC}% | FFA {preset.percentages.FFA}% | LTSS {preset.percentages.LTSS}% | EDU {preset.percentages.EDU}% | PLAY {preset.percentages.PLAY}% | GIVE {preset.percentages.GIVE}%
+                    </span>
+                  </button>
+                ))}
               </div>
             </CardContent>
           </Card>

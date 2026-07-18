@@ -168,3 +168,19 @@ export const getUserTransactions = query({
       .collect()
   },
 })
+
+export const deleteTransaction = mutation({
+  args: {
+    transactionId: v.id("transactions"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx)
+    if (!userId) throw new Error("Not authenticated")
+
+    const tx = await ctx.db.get(args.transactionId)
+    if (!tx || tx.userId !== userId) throw new Error("Transaction not found")
+
+    await ctx.db.delete(args.transactionId)
+    return { success: true }
+  },
+})
