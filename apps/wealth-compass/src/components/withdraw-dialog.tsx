@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, type ReactElement } from "react"
 import { useMutation, useQuery } from "convex/react"
 import { api } from "../../convex/_generated/api"
 import { JAR_FULL_NAMES } from "../../convex/constants"
@@ -33,6 +33,7 @@ export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
   const [open, setOpen] = useState(false)
   const [selectedJarId, setSelectedJarId] = useState<string>("")
   const [amount, setAmount] = useState("")
+  const [note, setNote] = useState("")
   const [loading, setLoading] = useState(false)
   const jarBalances = useQuery(api.jars.getJarBalances)
   const withdraw = useMutation(api.transactions.withdraw)
@@ -56,13 +57,18 @@ export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
 
     setLoading(true)
     try {
-      await withdraw({ jarId: selectedJarId as any, amount: totalAmount })
+      await withdraw({
+        jarId: selectedJarId as any,
+        amount: totalAmount,
+        note: note.trim() || undefined,
+      })
       toast.success(
         `Withdrew ${formatCurrency(totalAmount, currency)} from ${selectedJar?.jar.name}`,
       )
       setOpen(false)
       setSelectedJarId("")
       setAmount("")
+      setNote("")
     } catch (error) {
       console.error(error)
       toast.error("Failed to withdraw. Please try again.")
@@ -73,7 +79,7 @@ export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={children} />
+      <DialogTrigger render={children as ReactElement} />
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Withdraw from Jar</DialogTitle>
@@ -84,7 +90,7 @@ export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Select Jar</Label>
-            <Select value={selectedJarId} onValueChange={setSelectedJarId}>
+            <Select value={selectedJarId} onValueChange={(v) => setSelectedJarId(v ?? "")}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Choose a jar">
                   {selectedJarId && jarBalances
@@ -126,6 +132,15 @@ export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
                 Available: {formatCurrency(selectedJar.balance, currency)}
               </p>
             )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="withdraw-note">Note (optional)</Label>
+            <Input
+              id="withdraw-note"
+              placeholder="e.g., Groceries, Rent..."
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
           </div>
         </div>
         <DialogFooter>

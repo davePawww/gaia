@@ -17,7 +17,7 @@ import { toast } from "sonner"
 import { useTheme } from "@gaia/ui/lib/theme-provider"
 import { useCurrency } from "@wealth-compass/lib/use-currency"
 import { CurrencySelector } from "@wealth-compass/components/currency-selector"
-import { PERSONALITY_PRESETS } from "../../../convex/constants"
+import { PERSONALITY_PRESETS, DEFAULT_JARS } from "../../../convex/constants"
 import { useState, useEffect } from "react"
 
 function SettingsPage() {
@@ -75,20 +75,43 @@ function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-3">
                 {PERSONALITY_PRESETS.map((preset) => (
                   <button
                     key={preset.name}
                     onClick={() => handlePresetSelect(preset)}
-                    className="flex flex-col items-start rounded-lg border p-4 text-left transition-colors hover:bg-accent"
+                    className="group flex flex-col rounded-lg border p-4 text-left transition-all hover:border-primary hover:shadow-md"
                   >
-                    <span className="font-medium">{preset.name}</span>
+                    <span className="text-sm font-semibold">{preset.name}</span>
                     <span className="mt-1 text-xs text-muted-foreground">
                       {preset.description}
                     </span>
-                    <span className="mt-2 text-xs text-muted-foreground">
-                      NEC {preset.percentages.NEC}% | FFA {preset.percentages.FFA}% | LTSS {preset.percentages.LTSS}% | EDU {preset.percentages.EDU}% | PLAY {preset.percentages.PLAY}% | GIVE {preset.percentages.GIVE}%
-                    </span>
+                    <div className="mt-3 flex h-2 overflow-hidden rounded-full bg-muted">
+                      {DEFAULT_JARS.map((jar) => (
+                        <div
+                          key={jar.name}
+                          style={{
+                            width: `${preset.percentages[jar.name as keyof typeof preset.percentages]}%`,
+                            backgroundColor: jar.color,
+                          }}
+                          className="transition-all"
+                          title={`${jar.fullName}: ${preset.percentages[jar.name as keyof typeof preset.percentages]}%`}
+                        />
+                      ))}
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
+                      {DEFAULT_JARS.map((jar) => (
+                        <div key={jar.name} className="flex items-center gap-1.5">
+                          <div
+                            className="h-2 w-2 rounded-full"
+                            style={{ backgroundColor: jar.color }}
+                          />
+                          <span className="text-muted-foreground">
+                            {jar.name} {preset.percentages[jar.name as keyof typeof preset.percentages]}%
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </button>
                 ))}
               </div>

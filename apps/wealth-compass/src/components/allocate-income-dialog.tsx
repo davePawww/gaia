@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, type ReactElement } from "react"
 import { useMutation, useQuery } from "convex/react"
 import { api } from "../../convex/_generated/api"
 import {
@@ -63,7 +63,7 @@ export function AllocateIncomeDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={children} />
+      <DialogTrigger render={children as ReactElement} />
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Allocate Income</DialogTitle>

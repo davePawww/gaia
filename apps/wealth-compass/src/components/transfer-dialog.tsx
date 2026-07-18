@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, type ReactElement } from "react"
 import { useMutation, useQuery } from "convex/react"
 import { api } from "../../convex/_generated/api"
 import { JAR_FULL_NAMES } from "../../convex/constants"
@@ -35,6 +35,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
   const [fromJarId, setFromJarId] = useState<string>("")
   const [toJarId, setToJarId] = useState<string>("")
   const [amount, setAmount] = useState("")
+  const [note, setNote] = useState("")
   const [loading, setLoading] = useState(false)
   const jarBalances = useQuery(api.jars.getJarBalances)
   const transfer = useMutation(api.transactions.transfer)
@@ -67,6 +68,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
         fromJarId: fromJarId as any,
         toJarId: toJarId as any,
         amount: totalAmount,
+        note: note.trim() || undefined,
       })
       toast.success(
         `Transferred ${formatCurrency(totalAmount, currency)} from ${fromJar?.jar.name} to ${toJar?.jar.name}`,
@@ -75,6 +77,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
       setFromJarId("")
       setToJarId("")
       setAmount("")
+      setNote("")
     } catch (error) {
       console.error(error)
       toast.error("Failed to transfer. Please try again.")
@@ -85,7 +88,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={children} />
+      <DialogTrigger render={children as ReactElement} />
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Transfer Between Jars</DialogTitle>
@@ -96,7 +99,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>From Jar</Label>
-            <Select value={fromJarId} onValueChange={setFromJarId}>
+            <Select value={fromJarId} onValueChange={(v) => setFromJarId(v ?? "")}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select source jar">
                   {fromJarId && jarBalances
@@ -129,7 +132,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
 
           <div className="space-y-2">
             <Label>To Jar</Label>
-            <Select value={toJarId} onValueChange={setToJarId}>
+            <Select value={toJarId} onValueChange={(v) => setToJarId(v ?? "")}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select destination jar">
                   {toJarId && jarBalances
@@ -175,6 +178,15 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
                 {formatCurrency(fromJar.balance, currency)}
               </p>
             )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="transfer-note">Note (optional)</Label>
+            <Input
+              id="transfer-note"
+              placeholder="e.g., Move savings to emergency fund..."
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
           </div>
         </div>
         <DialogFooter>

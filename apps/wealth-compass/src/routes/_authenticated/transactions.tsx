@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useQuery, useMutation } from "convex/react"
 import { api } from "../../../convex/_generated/api"
+import type { Id } from "../../../convex/_generated/dataModel"
 import {
   Card,
   CardContent,
@@ -29,11 +30,11 @@ function TransactionsPage() {
   const transactions = useQuery(api.transactions.getUserTransactions)
   const jarBalances = useQuery(api.jars.getJarBalances)
   const deleteTransaction = useMutation(api.transactions.deleteTransaction)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<Id<"transactions"> | null>(null)
 
   const isLoading = transactions === undefined || jarBalances === undefined
 
-  const handleDelete = async (transactionId: string) => {
+  const handleDelete = async (transactionId: Id<"transactions">) => {
     setDeletingId(transactionId)
     try {
       await deleteTransaction({ transactionId })
@@ -135,9 +136,18 @@ function TransactionsPage() {
                           `${getJarName(t.fromJarId)} → ${getJarName(t.toJarId)}`}
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDate(t.createdAt)}
-                    </p>
+                    {t.note ? (
+                      <p className="text-xs text-muted-foreground truncate">{t.note}</p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        {formatDate(t.createdAt)}
+                      </p>
+                    )}
+                    {t.note && (
+                      <p className="text-xs text-muted-foreground">
+                        {formatDate(t.createdAt)}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <span

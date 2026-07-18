@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, type ReactElement } from "react"
 import { useMutation, useQuery } from "convex/react"
 import { api } from "../../convex/_generated/api"
 import {
@@ -89,7 +89,7 @@ export function CreateGoalDialog({ currency: _currency, children }: CreateGoalDi
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={children} />
+      <DialogTrigger render={children as ReactElement} />
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Create Goal</DialogTitle>
@@ -129,7 +129,7 @@ export function CreateGoalDialog({ currency: _currency, children }: CreateGoalDi
           {type === "jar" && (
             <div className="space-y-2">
               <Label>Select Jar</Label>
-              <Select value={jarId} onValueChange={setJarId}>
+              <Select value={jarId} onValueChange={(v) => setJarId(v ?? "")}>
                 <SelectTrigger className="w-full">
                   <SelectValue>
                     {jarId ? (JAR_FULL_NAMES[jars?.find((j) => j._id === jarId)?.name ?? ""] ?? "Select jar") : "Choose a jar"}
