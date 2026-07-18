@@ -86,11 +86,15 @@ export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
             <Label>Select Jar</Label>
             <Select value={selectedJarId} onValueChange={setSelectedJarId}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Choose a jar" />
+                <SelectValue placeholder="Choose a jar">
+                  {selectedJarId && jarBalances
+                    ? (JAR_FULL_NAMES[jarBalances.find(jb => jb.jar._id === selectedJarId)?.jar.name ?? ""] ?? "Choose a jar")
+                    : "Choose a jar"}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {jarBalances?.map((jb) => (
-                  <SelectItem key={jb.jar._id} value={jb.jar._id} label={JAR_FULL_NAMES[jb.jar.name] ?? jb.jar.name}>
+                  <SelectItem key={jb.jar._id} value={jb.jar._id}>
                     <div className="flex items-center gap-2">
                       <div
                         className="h-2 w-2 rounded-full"

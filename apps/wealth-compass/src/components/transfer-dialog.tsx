@@ -98,11 +98,15 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
             <Label>From Jar</Label>
             <Select value={fromJarId} onValueChange={setFromJarId}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select source jar" />
+                <SelectValue placeholder="Select source jar">
+                  {fromJarId && jarBalances
+                    ? (JAR_FULL_NAMES[jarBalances.find(jb => jb.jar._id === fromJarId)?.jar.name ?? ""] ?? "Select source jar")
+                    : "Select source jar"}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {jarBalances?.map((jb) => (
-                  <SelectItem key={jb.jar._id} value={jb.jar._id} label={JAR_FULL_NAMES[jb.jar.name] ?? jb.jar.name}>
+                  <SelectItem key={jb.jar._id} value={jb.jar._id}>
                     <div className="flex items-center gap-2">
                       <div
                         className="h-2 w-2 rounded-full"
@@ -127,13 +131,17 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
             <Label>To Jar</Label>
             <Select value={toJarId} onValueChange={setToJarId}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select destination jar" />
+                <SelectValue placeholder="Select destination jar">
+                  {toJarId && jarBalances
+                    ? (JAR_FULL_NAMES[jarBalances.find(jb => jb.jar._id === toJarId)?.jar.name ?? ""] ?? "Select destination jar")
+                    : "Select destination jar"}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {jarBalances
                   ?.filter((jb) => jb.jar._id !== fromJarId)
                   .map((jb) => (
-                    <SelectItem key={jb.jar._id} value={jb.jar._id} label={JAR_FULL_NAMES[jb.jar.name] ?? jb.jar.name}>
+                    <SelectItem key={jb.jar._id} value={jb.jar._id}>
                       <div className="flex items-center gap-2">
                         <div
                           className="h-2 w-2 rounded-full"
