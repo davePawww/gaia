@@ -1,12 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useAuthActions, useConvexAuth } from "@convex-dev/auth/react"
 import { useEffect, useState } from "react"
+import { useMutation } from "convex/react"
+import { api } from "../../convex/_generated/api"
 import { Button } from "@gaia/ui/components/button"
 import { Input } from "@gaia/ui/components/input"
 import { Label } from "@gaia/ui/components/label"
 import { Link } from "@tanstack/react-router"
 import { ChevronLeft, Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { PERSONALITY_PRESETS, type PersonalityPresetName } from "../../convex/constants"
 
 function SignUpPage() {
   const navigate = useNavigate()
@@ -16,12 +19,28 @@ function SignUpPage() {
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
   const [loading, setLoading] = useState(false)
+  const updateAllJarPercentages = useMutation(api.jars.updateAllJarPercentages)
+
+  // Get personality from localStorage (set by results page)
+  const personality = localStorage.getItem("wealth-compass-personality") as PersonalityPresetName | null
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
+      // Apply personality preset after sign-up if available
+      if (personality) {
+        const preset = PERSONALITY_PRESETS.find(
+          (p) => p.name.toLowerCase() === personality.toLowerCase()
+        )
+        if (preset) {
+          updateAllJarPercentages({
+            percentages: preset.percentages,
+          }).catch(console.error)
+        }
+        localStorage.removeItem("wealth-compass-personality")
+      }
       navigate({ to: "/dashboard" })
     }
-  }, [isLoading, isAuthenticated, navigate])
+  }, [isLoading, isAuthenticated, navigate, personality, updateAllJarPercentages])
 
   if (isLoading) {
     return (
@@ -74,6 +93,11 @@ function SignUpPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             Start building wealth with the Money Jar System
           </p>
+          {personality && (
+            <p className="mt-2 text-xs text-primary">
+              Your personality: {personality.charAt(0).toUpperCase() + personality.slice(1)}
+            </p>
+          )}
         </div>
         <form onSubmit={handleEmailSignUp} className="space-y-4">
           <div className="space-y-2">

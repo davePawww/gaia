@@ -94,7 +94,7 @@ function LandingPage() {
           your money goes - start directing it.
         </p>
         <div className="mt-8 flex gap-4">
-          <Link to={isAuthenticated ? "/dashboard" : "/sign-up"}>
+          <Link to={isAuthenticated ? "/dashboard" : "/questionnaire"}>
             <Button size="lg">
               Get Started Free
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -160,7 +160,7 @@ function LandingPage() {
         <p className="mt-4 text-muted-foreground">
           Start building wealth today with the Money Jar System.
         </p>
-        <Link to={isAuthenticated ? "/dashboard" : "/sign-up"}>
+        <Link to={isAuthenticated ? "/dashboard" : "/questionnaire"}>
           <Button size="lg" className="mt-8">
             Get Started Free
             <ArrowRight className="ml-2 h-4 w-4" />
