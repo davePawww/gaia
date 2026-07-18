@@ -102,7 +102,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
               </SelectTrigger>
               <SelectContent>
                 {jarBalances?.map((jb) => (
-                  <SelectItem key={jb.jar._id} value={jb.jar._id}>
+                  <SelectItem key={jb.jar._id} value={jb.jar._id} label={JAR_FULL_NAMES[jb.jar.name] ?? jb.jar.name}>
                     <div className="flex items-center gap-2">
                       <div
                         className="h-2 w-2 rounded-full"
@@ -133,7 +133,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
                 {jarBalances
                   ?.filter((jb) => jb.jar._id !== fromJarId)
                   .map((jb) => (
-                    <SelectItem key={jb.jar._id} value={jb.jar._id}>
+                    <SelectItem key={jb.jar._id} value={jb.jar._id} label={JAR_FULL_NAMES[jb.jar.name] ?? jb.jar.name}>
                       <div className="flex items-center gap-2">
                         <div
                           className="h-2 w-2 rounded-full"
