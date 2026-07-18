@@ -14,6 +14,8 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
+import { Route as PublicResultsRouteImport } from './routes/_public/results'
+import { Route as PublicQuestionnaireRouteImport } from './routes/_public/questionnaire'
 import { Route as PublicHowItWorksRouteImport } from './routes/_public/how-it-works'
 import { Route as PublicFaqsRouteImport } from './routes/_public/faqs'
 import { Route as PublicAboutRouteImport } from './routes/_public/about'
@@ -44,6 +46,16 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const PublicIndexRoute = PublicIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicResultsRoute = PublicResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicQuestionnaireRoute = PublicQuestionnaireRouteImport.update({
+  id: '/questionnaire',
+  path: '/questionnaire',
   getParentRoute: () => PublicRoute,
 } as any)
 const PublicHowItWorksRoute = PublicHowItWorksRouteImport.update({
@@ -100,6 +112,8 @@ export interface FileRoutesByFullPath {
   '/about': typeof PublicAboutRoute
   '/faqs': typeof PublicFaqsRoute
   '/how-it-works': typeof PublicHowItWorksRoute
+  '/questionnaire': typeof PublicQuestionnaireRoute
+  '/results': typeof PublicResultsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
@@ -113,6 +127,8 @@ export interface FileRoutesByTo {
   '/about': typeof PublicAboutRoute
   '/faqs': typeof PublicFaqsRoute
   '/how-it-works': typeof PublicHowItWorksRoute
+  '/questionnaire': typeof PublicQuestionnaireRoute
+  '/results': typeof PublicResultsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -128,6 +144,8 @@ export interface FileRoutesById {
   '/_public/about': typeof PublicAboutRoute
   '/_public/faqs': typeof PublicFaqsRoute
   '/_public/how-it-works': typeof PublicHowItWorksRoute
+  '/_public/questionnaire': typeof PublicQuestionnaireRoute
+  '/_public/results': typeof PublicResultsRoute
   '/_public/': typeof PublicIndexRoute
 }
 export interface FileRouteTypes {
@@ -144,6 +162,8 @@ export interface FileRouteTypes {
     | '/about'
     | '/faqs'
     | '/how-it-works'
+    | '/questionnaire'
+    | '/results'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -157,6 +177,8 @@ export interface FileRouteTypes {
     | '/about'
     | '/faqs'
     | '/how-it-works'
+    | '/questionnaire'
+    | '/results'
   id:
     | '__root__'
     | '/_authenticated'
@@ -171,6 +193,8 @@ export interface FileRouteTypes {
     | '/_public/about'
     | '/_public/faqs'
     | '/_public/how-it-works'
+    | '/_public/questionnaire'
+    | '/_public/results'
     | '/_public/'
   fileRoutesById: FileRoutesById
 }
@@ -216,6 +240,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof PublicIndexRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/results': {
+      id: '/_public/results'
+      path: '/results'
+      fullPath: '/results'
+      preLoaderRoute: typeof PublicResultsRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/questionnaire': {
+      id: '/_public/questionnaire'
+      path: '/questionnaire'
+      fullPath: '/questionnaire'
+      preLoaderRoute: typeof PublicQuestionnaireRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/how-it-works': {
@@ -301,6 +339,8 @@ interface PublicRouteChildren {
   PublicAboutRoute: typeof PublicAboutRoute
   PublicFaqsRoute: typeof PublicFaqsRoute
   PublicHowItWorksRoute: typeof PublicHowItWorksRoute
+  PublicQuestionnaireRoute: typeof PublicQuestionnaireRoute
+  PublicResultsRoute: typeof PublicResultsRoute
   PublicIndexRoute: typeof PublicIndexRoute
 }
 
@@ -308,6 +348,8 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicAboutRoute: PublicAboutRoute,
   PublicFaqsRoute: PublicFaqsRoute,
   PublicHowItWorksRoute: PublicHowItWorksRoute,
+  PublicQuestionnaireRoute: PublicQuestionnaireRoute,
+  PublicResultsRoute: PublicResultsRoute,
   PublicIndexRoute: PublicIndexRoute,
 }
 
