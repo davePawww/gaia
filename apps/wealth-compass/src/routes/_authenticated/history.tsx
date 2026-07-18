@@ -76,7 +76,7 @@ function HistoryPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {formatCurrency(weekly.income, currency)}
                   </div>
                 </CardContent>
@@ -88,7 +88,7 @@ function HistoryPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-red-600">
+                  <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                     {formatCurrency(weekly.withdrawals, currency)}
                   </div>
                 </CardContent>
@@ -100,7 +100,7 @@ function HistoryPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {formatCurrency(weekly.transfers, currency)}
                   </div>
                 </CardContent>
@@ -123,7 +123,7 @@ function HistoryPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {formatCurrency(monthly.income, currency)}
                   </div>
                 </CardContent>
@@ -135,7 +135,7 @@ function HistoryPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-red-600">
+                  <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                     {formatCurrency(monthly.withdrawals, currency)}
                   </div>
                 </CardContent>
@@ -147,7 +147,7 @@ function HistoryPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {formatCurrency(monthly.transfers, currency)}
                   </div>
                 </CardContent>
@@ -170,7 +170,7 @@ function HistoryPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {formatCurrency(yearly.income, currency)}
                   </div>
                 </CardContent>
@@ -182,7 +182,7 @@ function HistoryPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-red-600">
+                  <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                     {formatCurrency(yearly.withdrawals, currency)}
                   </div>
                 </CardContent>
@@ -194,7 +194,7 @@ function HistoryPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {formatCurrency(yearly.transfers, currency)}
                   </div>
                 </CardContent>

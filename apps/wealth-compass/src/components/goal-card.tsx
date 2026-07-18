@@ -68,7 +68,12 @@ export function GoalCard({ goal, currency }: GoalCardProps) {
           )}
           <CardTitle className="text-sm font-medium">{goal.name}</CardTitle>
         </div>
-        <Button variant="ghost" size="sm" onClick={handleDelete}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleDelete}
+          aria-label={`Delete ${goal.name}`}
+        >
           <Trash2 className="h-4 w-4" />
         </Button>
       </CardHeader>

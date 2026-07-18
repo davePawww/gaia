@@ -15,6 +15,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import type { Doc } from "../../convex/_generated/dataModel"
+import { formatCurrency, type CurrencyCode } from "@wealth-compass/lib/currency"
 
 const iconMap: Record<string, LucideIcon> = {
   Home,
@@ -29,9 +30,10 @@ interface JarCardProps {
   jar: Doc<"jars">
   balance: number
   recentIncome: number
+  currency: CurrencyCode
 }
 
-export function JarCard({ jar, balance, recentIncome }: JarCardProps) {
+export function JarCard({ jar, balance, recentIncome, currency }: JarCardProps) {
   const Icon = iconMap[jar.icon] ?? Home
   const fillPercentage =
     recentIncome > 0 ? Math.min((balance / recentIncome) * 100, 100) : 0
@@ -52,13 +54,16 @@ export function JarCard({ jar, balance, recentIncome }: JarCardProps) {
         </Badge>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">${balance.toLocaleString()}</div>
+        <div className="text-2xl font-bold">
+          {formatCurrency(balance, currency)}
+        </div>
         <Progress value={fillPercentage} className="mt-3">
           <ProgressLabel className="sr-only">{jar.name} progress</ProgressLabel>
           <ProgressValue />
         </Progress>
         <p className="mt-1 text-xs text-muted-foreground">
-          ${balance.toFixed(0)} of ${recentIncome.toFixed(0)} allocated
+          {formatCurrency(balance, currency)} of{" "}
+          {formatCurrency(recentIncome, currency)} allocated
         </p>
       </CardContent>
     </Card>

@@ -139,23 +139,33 @@ function JarSettings({
   }
 
   return (
-    <div className="flex items-end gap-4 rounded-lg border p-3">
+    <div className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-end sm:gap-4">
       <div className="flex-1 space-y-2">
-        <Label>Name</Label>
-        <Input value={name} onChange={(e) => setName(e.target.value)} />
+        <Label htmlFor={`jar-name-${jar._id}`}>Name</Label>
+        <Input
+          id={`jar-name-${jar._id}`}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
       </div>
-      <div className="w-24 space-y-2">
-        <Label>Color</Label>
+      <div className="w-full space-y-2 sm:w-24">
+        <Label htmlFor={`jar-color-${jar._id}`}>Color</Label>
         <input
+          id={`jar-color-${jar._id}`}
           type="color"
           value={color}
           onChange={(e) => setColor(e.target.value)}
-          className="h-9 w-full cursor-pointer rounded border"
+          aria-label={`${name} color`}
+          className="h-9 w-full cursor-pointer rounded border border-input bg-background"
         />
       </div>
-      <div className="w-20 space-y-2">
-        <Label>%</Label>
-        <Input value={`${jar.percentage}%`} disabled />
+      <div className="w-full space-y-2 sm:w-20">
+        <Label htmlFor={`jar-pct-${jar._id}`}>%</Label>
+        <Input
+          id={`jar-pct-${jar._id}`}
+          value={`${jar.percentage}%`}
+          disabled
+        />
       </div>
       <Button
         size="sm"

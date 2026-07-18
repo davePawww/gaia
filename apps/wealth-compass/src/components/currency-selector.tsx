@@ -15,7 +15,7 @@ export function CurrencySelector() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="outline" size="sm" />}>
+      <DropdownMenuTrigger render={<Button variant="outline" size="sm" aria-label="Select currency" />}>
         {current?.symbol} {current?.code}
         <ChevronDown className="ml-1 h-3 w-3" />
       </DropdownMenuTrigger>

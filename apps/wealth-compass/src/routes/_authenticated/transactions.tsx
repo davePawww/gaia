@@ -99,13 +99,13 @@ function TransactionsPage() {
                   <div className="flex items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
                       {t.type === "income" && (
-                        <ArrowDownRight className="h-4 w-4 text-green-500" />
+                        <ArrowDownRight className="h-4 w-4 text-green-500 dark:text-green-400" />
                       )}
                       {t.type === "withdrawal" && (
-                        <ArrowUpRight className="h-4 w-4 text-red-500" />
+                        <ArrowUpRight className="h-4 w-4 text-red-500 dark:text-red-400" />
                       )}
                       {t.type === "transfer" && (
-                        <ArrowRightLeft className="h-4 w-4 text-blue-500" />
+                        <ArrowRightLeft className="h-4 w-4 text-blue-500 dark:text-blue-400" />
                       )}
                     </div>
                     <div>

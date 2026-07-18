@@ -135,7 +135,11 @@ export function HistoryCharts({
       </CardHeader>
       <CardContent>
         {hasData ? (
-          <ChartContainer config={chartConfig} className="h-[300px] w-full">
+          <ChartContainer
+            config={chartConfig}
+            className="h-[300px] w-full"
+            aria-label={`${period} income and withdrawal trends chart`}
+          >
             <BarChart data={data}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
