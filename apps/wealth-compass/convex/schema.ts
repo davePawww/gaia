@@ -1,5 +1,4 @@
 import { defineSchema, defineTable } from "convex/server"
-// TODO: add goal tracking tables
 import { v } from "convex/values"
 import { authTables } from "@convex-dev/auth/server"
 
@@ -55,6 +54,7 @@ export default defineSchema({
 
   goals: defineTable({
     userId: v.id("users"),
+    name: v.string(),
     type: v.union(v.literal("jar"), v.literal("netWorth")),
     targetAmount: v.number(),
     jarId: v.optional(v.id("jars")),
