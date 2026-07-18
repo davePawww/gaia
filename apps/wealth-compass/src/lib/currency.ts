@@ -5,6 +5,7 @@ export const CURRENCIES = [
   { code: "JPY", symbol: "¥", label: "Japanese Yen" },
   { code: "CAD", symbol: "C$", label: "Canadian Dollar" },
   { code: "AUD", symbol: "A$", label: "Australian Dollar" },
+  { code: "PHP", symbol: "₱", label: "Philippine Peso" },
 ] as const
 
 export type CurrencyCode = (typeof CURRENCIES)[number]["code"]

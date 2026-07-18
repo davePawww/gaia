@@ -27,7 +27,6 @@ import {
   ArrowRightLeft,
 } from "lucide-react"
 import { JarCard } from "@wealth-compass/components/jar-card"
-import { CurrencySelector } from "@wealth-compass/components/currency-selector"
 import { AllocateIncomeDialog } from "@wealth-compass/components/allocate-income-dialog"
 import { WithdrawDialog } from "@wealth-compass/components/withdraw-dialog"
 import { TransferDialog } from "@wealth-compass/components/transfer-dialog"
@@ -90,7 +89,6 @@ function DashboardPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <div className="flex flex-wrap items-center gap-2">
-          <CurrencySelector />
           <AllocateIncomeDialog currency={currency}>
             <Button size="sm">
               <Plus className="mr-1 h-4 w-4" />
