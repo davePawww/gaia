@@ -5,7 +5,7 @@ import { ArrowRight, ChevronLeft } from "lucide-react"
 import {
   PERSONALITY_DESCRIPTIONS,
   type PersonalityType,
-} from "@/lib/questionnaire-data"
+} from "@wealth-compass/lib/questionnaire-data"
 import {
   Home,
   TrendingUp,
@@ -149,10 +149,7 @@ function ResultsPage() {
               You can always adjust your jar percentages later in Settings.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Link
-                to="/sign-up"
-                search={{ personality }}
-              >
+              <Link to="/sign-up">
                 <Button size="lg" className="w-full sm:w-auto">
                   Create Account to Start
                   <ArrowRight className="ml-2 h-4 w-4" />

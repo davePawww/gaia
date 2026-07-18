@@ -7,7 +7,7 @@ import {
   QUESTIONS,
   type AnswerType,
   calculatePersonality,
-} from "@/lib/questionnaire-data"
+} from "@wealth-compass/lib/questionnaire-data"
 import { cn } from "@gaia/ui/lib/utils"
 
 function QuestionnairePage() {
