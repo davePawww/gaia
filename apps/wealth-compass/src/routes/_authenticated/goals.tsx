@@ -6,7 +6,6 @@ import { Skeleton } from "@gaia/ui/components/skeleton"
 import { Plus } from "lucide-react"
 import { GoalCard } from "@wealth-compass/components/goal-card"
 import { CreateGoalDialog } from "@wealth-compass/components/create-goal-dialog"
-import { CurrencySelector } from "@wealth-compass/components/currency-selector"
 import { useCurrency } from "@wealth-compass/lib/use-currency"
 
 function GoalsPage() {
@@ -20,7 +19,6 @@ function GoalsPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold">Goals</h1>
         <div className="flex flex-wrap items-center gap-2">
-          <CurrencySelector />
           <CreateGoalDialog currency={currency}>
             <Button size="sm">
               <Plus className="mr-1 h-4 w-4" />

@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useMutation, useQuery } from "convex/react"
 import { api } from "../../convex/_generated/api"
+import { JAR_FULL_NAMES } from "../../convex/constants"
 import {
   Dialog,
   DialogContent,
@@ -107,7 +108,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
                         className="h-2 w-2 rounded-full"
                         style={{ backgroundColor: jb.jar.color }}
                       />
-                      <span>{jb.jar.name}</span>
+                      <span>{JAR_FULL_NAMES[jb.jar.name] ?? jb.jar.name}</span>
                       <span className="text-muted-foreground">
                         ({formatCurrency(jb.balance, currency)})
                       </span>
@@ -138,7 +139,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
                           className="h-2 w-2 rounded-full"
                           style={{ backgroundColor: jb.jar.color }}
                         />
-                        <span>{jb.jar.name}</span>
+                        <span>{JAR_FULL_NAMES[jb.jar.name] ?? jb.jar.name}</span>
                         <span className="text-muted-foreground">
                           ({formatCurrency(jb.balance, currency)})
                         </span>

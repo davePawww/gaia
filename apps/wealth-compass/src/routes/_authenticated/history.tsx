@@ -16,7 +16,6 @@ import {
 import { Skeleton } from "@gaia/ui/components/skeleton"
 import { useCurrency } from "@wealth-compass/lib/use-currency"
 import { formatCurrency } from "@wealth-compass/lib/currency"
-import { CurrencySelector } from "@wealth-compass/components/currency-selector"
 import { HistoryCharts } from "@wealth-compass/components/history-charts"
 
 function HistoryPage() {
@@ -49,10 +48,7 @@ function HistoryPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold">History</h1>
-        <CurrencySelector />
-      </div>
+      <h1 className="text-2xl font-bold">History</h1>
 
       {isLoading ? (
         <div className="space-y-4">
