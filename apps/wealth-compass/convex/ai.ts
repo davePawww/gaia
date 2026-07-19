@@ -57,7 +57,11 @@ Rules:
 - Only return the JSON object, no other text`
 
     try {
-      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+      const apiKey = process.env.GEMINI_API_KEY
+      console.log("Gemini API key present:", !!apiKey)
+      console.log("Spending data keys:", Object.keys(body))
+
+      const genAI = new GoogleGenerativeAI(apiKey!)
       const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
       const result = await model.generateContent(prompt)
       const text = result.response.text()
@@ -68,7 +72,8 @@ Rules:
       }
 
       return JSON.parse(jsonMatch[0])
-    } catch {
+    } catch (error) {
+      console.error("Gemini AI error:", error)
       return {
         insights: [
           {
