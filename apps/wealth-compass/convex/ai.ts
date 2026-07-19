@@ -65,13 +65,21 @@ Rules:
       const model = genAI.getGenerativeModel({ model: "gemma-4-26b-a4b-it" })
       const result = await model.generateContent(prompt)
       const text = result.response.text()
+      console.log("Gemini raw response:", text.slice(0, 500))
 
-      const jsonMatch = text.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) {
-        throw new Error("No JSON found in response")
+      let jsonStr = text
+
+      const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/)
+      if (codeBlockMatch) {
+        jsonStr = codeBlockMatch[1].trim()
       }
 
-      return JSON.parse(jsonMatch[0])
+      const jsonMatch = jsonStr.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        jsonStr = jsonMatch[0]
+      }
+
+      return JSON.parse(jsonStr)
     } catch (error) {
       console.error("Gemini AI error:", error)
       const isQuotaError = String(error).includes("429") || String(error).includes("quota")
