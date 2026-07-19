@@ -100,9 +100,11 @@ function LandingPage() {
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
-          <Button size="lg" variant="outline">
-            See How it Works
-          </Button>
+          <Link to="/how-it-works">
+            <Button size="lg" variant="outline">
+              See How it Works
+            </Button>
+          </Link>
         </div>
       </section>
 
