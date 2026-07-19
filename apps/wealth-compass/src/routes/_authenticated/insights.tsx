@@ -94,10 +94,18 @@ function InsightsPage() {
         })
         if (!cancelled) {
           setAiInsights(result.insights)
-          localStorage.setItem(
-            cacheKey,
-            JSON.stringify({ insights: result.insights, timestamp: Date.now() }),
+          const isError = result.insights?.some(
+            (i) =>
+              i.title === "Could not generate insights" ||
+              i.title === "AI quota exceeded" ||
+              i.title === "AI insights unavailable",
           )
+          if (!isError) {
+            localStorage.setItem(
+              cacheKey,
+              JSON.stringify({ insights: result.insights, timestamp: Date.now() }),
+            )
+          }
         }
       } catch {
         if (!cancelled) {
