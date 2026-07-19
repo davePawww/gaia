@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, Link } from "@tanstack/react-router"
 import { useQuery } from "convex/react"
 import { api } from "../../../convex/_generated/api"
 import {
@@ -40,6 +40,82 @@ const JAR_COLORS: Record<string, string> = {
   PLAY: "#A855F7",
   GIVE: "#22C55E",
   FFA: "#F59E0B",
+}
+
+function SpendingInsightsCard({ currency }: { currency: string }) {
+  const spendingByJar = useQuery(api.insights.getSpendingByJar, { days: 30 })
+  const summaryStats = useQuery(api.insights.getSummaryStats, { days: 30 })
+
+  const totalSpent = spendingByJar?.reduce((sum, item) => sum + item.total, 0) ?? 0
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Spending This Month</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {spendingByJar === undefined || summaryStats === undefined ? (
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-full rounded-full" />
+            <div className="flex gap-4">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          </div>
+        ) : spendingByJar.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 py-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              No spending data for the last 30 days.
+            </p>
+            <Link to="/insights" className="text-sm font-medium text-primary hover:underline">
+              View Insights &rarr;
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex h-4 overflow-hidden rounded-full">
+              {spendingByJar.map((item) => (
+                <div
+                  key={item.jarId}
+                  style={{
+                    width: `${(item.total / totalSpent) * 100}%`,
+                    backgroundColor: item.color,
+                  }}
+                />
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-4">
+              {spendingByJar.map((item) => (
+                <div key={item.jarId} className="flex items-center gap-2 text-sm">
+                  <div
+                    className="h-3 w-3 rounded-full"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <span className="text-muted-foreground">{item.jarName}</span>
+                  <span className="font-medium">
+                    {formatCurrency(item.total, currency)}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center justify-between border-t pt-3">
+              <span className="text-sm text-muted-foreground">Total spent</span>
+              <span className="text-lg font-bold">
+                {formatCurrency(totalSpent, currency)}
+              </span>
+            </div>
+            <Link
+              to="/insights"
+              className="inline-block text-sm font-medium text-primary hover:underline"
+            >
+              View Insights &rarr;
+            </Link>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
 }
 
 function DashboardPage() {
@@ -201,6 +277,8 @@ function DashboardPage() {
           </Card>
         </div>
       )}
+
+      <SpendingInsightsCard currency={currency} />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">

@@ -29,6 +29,7 @@ import {
   ArrowLeftRight,
   Target,
   History,
+  PieChart,
   Settings,
   LogOut,
 } from "lucide-react"
@@ -40,6 +41,7 @@ const mainNav = [
   { title: "Transactions", url: "/transactions", icon: ArrowLeftRight },
   { title: "Goals", url: "/goals", icon: Target },
   { title: "History", url: "/history", icon: History },
+  { title: "Insights", url: "/insights", icon: PieChart },
 ]
 
 const secondaryNav = [{ title: "Settings", url: "/settings", icon: Settings }]

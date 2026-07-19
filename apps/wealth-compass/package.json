@@ -13,6 +13,7 @@
     "@auth/core": "0.41.1",
     "@convex-dev/auth": "^0.0.94",
     "@gaia/ui": "workspace:*",
+    "@google/generative-ai": "^0.24.1",
     "@tanstack/react-router": "^1.120.0",
     "convex": "^1.42.1",
     "lucide-react": "^1.23.0",
