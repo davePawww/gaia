@@ -58,6 +58,7 @@ function QuestionScreen({
       const newAnswers = [...answers]
       newAnswers[currentQuestion] = letter
       setAnswers(newAnswers)
+      ;(document.activeElement as HTMLElement)?.blur()
 
       setTimeout(() => {
         if (currentQuestion < QUESTIONS.length - 1) {
@@ -133,7 +134,7 @@ function QuestionScreen({
                       : "border-border bg-background"
                   )}
                 >
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-center gap-3">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border text-xs font-medium">
                       {option.letter}
                     </span>
