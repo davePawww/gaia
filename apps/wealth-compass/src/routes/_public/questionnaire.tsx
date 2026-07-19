@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useState, useCallback } from "react"
 import { Button } from "@gaia/ui/components/button"
-import { ArrowLeft, ChevronLeft, Sparkles } from "lucide-react"
+import { ChevronLeft, Sparkles } from "lucide-react"
 import { Link } from "@tanstack/react-router"
 import {
   QUESTIONS,
