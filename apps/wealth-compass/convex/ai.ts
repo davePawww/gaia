@@ -39,7 +39,7 @@ export const generateInsights = action({
       monthComparison: body.monthComparison ? `Current: income $${body.monthComparison.current?.income?.toFixed(2)}, spending $${body.monthComparison.current?.spending?.toFixed(2)}. Previous: income $${body.monthComparison.previous?.income?.toFixed(2)}, spending $${body.monthComparison.previous?.spending?.toFixed(2)}` : "none",
     }
 
-    const prompt = `You are a financial advisor AI. Analyze this spending data and provide 3-5 actionable insights.
+    const prompt = `Analyze this financial data and provide 3-5 actionable insights.
 
 Spending by jar: ${summary.spendingByJar}
 Top categories: ${summary.spendingByCategory}
@@ -48,56 +48,25 @@ Income vs spending: ${summary.incomeVsSpending}
 Summary: ${summary.summaryStats}
 Month comparison: ${summary.monthComparison}
 
-Return a JSON object with this exact structure:
-{
-  "insights": [
-    {
-      "type": "spending_change" | "trend" | "positive" | "anomaly",
-      "title": "Short insight title (max 50 chars)",
-      "description": "Detailed insight in 1-2 sentences",
-      "severity": "info" | "warning" | "success" | "alert"
-    }
-  ]
-}
+Return ONLY a JSON object (no markdown, no explanation):
+{"insights":[{"type":"spending_change|trend|positive|anomaly","title":"max 50 chars","description":"1-2 sentences","severity":"info|warning|success|alert"}]}
 
-Rules:
-- Focus on significant changes (>10% difference)
-- Highlight both positive trends (savings) and warnings (overspending)
-- Compare current vs previous month
-- Note any spending anomalies (spikes or unusual patterns)
-- Be specific with numbers and percentages
-- Keep titles concise, descriptions clear
-- Only return the JSON object, no other text`
+Focus on changes >10%, savings vs overspending, anomalies. Be specific with numbers.`
 
     try {
       const apiKey = process.env.GEMINI_API_KEY
-      console.log("[AI] Starting - API key present:", !!apiKey)
-      console.log("[AI] Prompt length:", prompt.length)
 
       const genAI = new GoogleGenerativeAI(apiKey!)
-      const model = genAI.getGenerativeModel({ model: "gemma-4-26b-a4b-it" })
-      console.log("[AI] Calling Gemini API...")
-      const result = await model.generateContent(prompt)
-      console.log("[AI] Got response")
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+
+      const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: "application/json" },
+      })
+
       const text = result.response.text()
-      console.log("[AI] Response text:", text.slice(0, 300))
-
-      let jsonStr = text
-
-      const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/)
-      if (codeBlockMatch) {
-        jsonStr = codeBlockMatch[1].trim()
-      }
-
-      const jsonMatch = jsonStr.match(/\{[\s\S]*\}/)
-      if (jsonMatch) {
-        jsonStr = jsonMatch[0]
-      }
-
-      return JSON.parse(jsonStr)
+      return JSON.parse(text)
     } catch (error) {
-      console.error("[AI] ERROR:", JSON.stringify(error, null, 2))
-      console.error("[AI] Error string:", String(error))
       const isQuotaError = String(error).includes("429") || String(error).includes("quota")
       return {
         insights: [
