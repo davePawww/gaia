@@ -65,6 +65,21 @@ function InsightsPage() {
   useEffect(() => {
     if (isLoading) return
 
+    const cacheKey = "wealth-compass-ai-insights"
+    const cached = localStorage.getItem(cacheKey)
+    if (cached) {
+      try {
+        const { insights, timestamp } = JSON.parse(cached)
+        if (Date.now() - timestamp < 60 * 60 * 1000) {
+          setAiInsights(insights)
+          setAiLoading(false)
+          return
+        }
+      } catch {
+        localStorage.removeItem(cacheKey)
+      }
+    }
+
     let cancelled = false
 
     async function run() {
@@ -79,6 +94,10 @@ function InsightsPage() {
         })
         if (!cancelled) {
           setAiInsights(result.insights)
+          localStorage.setItem(
+            cacheKey,
+            JSON.stringify({ insights: result.insights, timestamp: Date.now() }),
+          )
         }
       } catch {
         if (!cancelled) {
