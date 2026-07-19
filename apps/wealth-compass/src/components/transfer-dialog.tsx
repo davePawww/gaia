@@ -34,10 +34,17 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
   const [open, setOpen] = useState(false)
   const [fromJarId, setFromJarId] = useState<string>("")
   const [toJarId, setToJarId] = useState<string>("")
+  const [categoryId, setCategoryId] = useState<string>("")
   const [amount, setAmount] = useState("")
   const [note, setNote] = useState("")
   const [loading, setLoading] = useState(false)
   const jarBalances = useQuery(api.jars.getJarBalances)
+  const categories = useQuery(
+    api.categories.getCategoriesByJar,
+    fromJarId && jarBalances
+      ? { jarName: jarBalances.find((jb) => jb.jar._id === fromJarId)?.jar.name ?? "" }
+      : "skip"
+  )
   const transfer = useMutation(api.transactions.transfer)
 
   const totalAmount = parseFloat(amount) || 0
@@ -69,6 +76,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
         toJarId: toJarId as any,
         amount: totalAmount,
         note: note.trim() || undefined,
+        categoryId: categoryId ? (categoryId as any) : undefined,
       })
       toast.success(
         `Transferred ${formatCurrency(totalAmount, currency)} from ${fromJar?.jar.name} to ${toJar?.jar.name}`,
@@ -76,6 +84,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
       setOpen(false)
       setFromJarId("")
       setToJarId("")
+      setCategoryId("")
       setAmount("")
       setNote("")
     } catch (error) {
@@ -188,6 +197,23 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
               onChange={(e) => setNote(e.target.value)}
             />
           </div>
+          {categories && categories.length > 0 && (
+            <div className="space-y-2">
+              <Label>Category (optional)</Label>
+              <Select value={categoryId} onValueChange={(v) => setCategoryId(v ?? "")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choose a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>

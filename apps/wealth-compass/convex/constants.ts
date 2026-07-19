@@ -30,3 +30,12 @@ export type PersonalityPresetName = (typeof PERSONALITY_PRESETS)[number]["name"]
 export const JAR_FULL_NAMES: Record<string, string> = Object.fromEntries(
   DEFAULT_JARS.map((jar) => [jar.name, jar.fullName])
 )
+
+export const DEFAULT_CATEGORIES: Record<string, string[]> = {
+  NEC: ["Groceries", "Rent/Mortgage", "Utilities", "Transportation", "Healthcare", "Insurance", "Phone/Internet"],
+  LTSS: ["Emergency Fund", "Retirement", "Investments", "Large Purchases"],
+  EDU: ["Courses", "Books", "Certifications", "Workshops", "Tuition"],
+  PLAY: ["Dining Out", "Entertainment", "Hobbies", "Travel", "Shopping"],
+  GIVE: ["Donations", "Gifts", "Charity", "Tips"],
+  FFA: ["Business Investment", "Side Project", "Passive Income", "Real Estate"],
+}

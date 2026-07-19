@@ -17,18 +17,20 @@ import { toast } from "sonner"
 import { useTheme } from "@gaia/ui/lib/theme-provider"
 import { useCurrency } from "@wealth-compass/lib/use-currency"
 import { CurrencySelector } from "@wealth-compass/components/currency-selector"
-import { PERSONALITY_PRESETS, DEFAULT_JARS } from "../../../convex/constants"
+import { PERSONALITY_PRESETS, DEFAULT_JARS, JAR_FULL_NAMES } from "../../../convex/constants"
 import { useState, useEffect } from "react"
+import { Trash2, Plus } from "lucide-react"
 
 function SettingsPage() {
   const { theme, setTheme } = useTheme()
   useCurrency()
   const jars = useQuery(api.jars.getUserJars)
+  const categories = useQuery(api.categories.getUserCategories)
   const updateJar = useMutation(api.jars.updateJar)
   const updateAllJarPercentages = useMutation(api.jars.updateAllJarPercentages)
   const user = useQuery(api.users.getCurrentUser)
 
-  const isLoading = jars === undefined || user === undefined
+  const isLoading = jars === undefined || user === undefined || categories === undefined
 
   const handlePresetSelect = async (preset: (typeof PERSONALITY_PRESETS)[number]) => {
     try {
@@ -128,6 +130,24 @@ function SettingsPage() {
             <CardContent className="space-y-4">
               {jars?.map((jar) => (
                 <JarSettings key={jar._id} jar={jar} onUpdate={updateJar} />
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Transaction Categories</CardTitle>
+              <CardDescription>
+                Manage sub-categories for each jar
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {jars?.map((jar) => (
+                <CategorySettings
+                  key={jar._id}
+                  jarName={jar.name}
+                  categories={categories?.filter((c) => c.jarName === jar.name) ?? []}
+                />
               ))}
             </CardContent>
           </Card>
@@ -236,6 +256,155 @@ function JarSettings({
       >
         {saving ? "..." : "Save"}
       </Button>
+    </div>
+  )
+}
+
+function CategorySettings({
+  jarName,
+  categories,
+}: {
+  jarName: string
+  categories: { _id: string; name: string }[]
+}) {
+  const [newCategory, setNewCategory] = useState("")
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingName, setEditingName] = useState("")
+  const addCategory = useMutation(api.categories.addCategory)
+  const renameCategory = useMutation(api.categories.renameCategory)
+  const deleteCategory = useMutation(api.categories.deleteCategory)
+  const resetToDefaults = useMutation(api.categories.resetToDefaults)
+
+  const handleAdd = async () => {
+    if (!newCategory.trim()) return
+    try {
+      await addCategory({ jarName, name: newCategory.trim() })
+      setNewCategory("")
+      toast.success("Category added")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to add category")
+    }
+  }
+
+  const handleRename = async (categoryId: string) => {
+    if (!editingName.trim()) return
+    try {
+      await renameCategory({ categoryId: categoryId as any, name: editingName.trim() })
+      setEditingId(null)
+      toast.success("Category renamed")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to rename category")
+    }
+  }
+
+  const handleDelete = async (categoryId: string) => {
+    try {
+      await deleteCategory({ categoryId: categoryId as any })
+      toast.success("Category deleted")
+    } catch {
+      toast.error("Failed to delete category")
+    }
+  }
+
+  const handleReset = async () => {
+    try {
+      await resetToDefaults({ jarName })
+      toast.success("Reset to defaults")
+    } catch {
+      toast.error("Failed to reset categories")
+    }
+  }
+
+  return (
+    <div className="rounded-lg border p-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">
+            {JAR_FULL_NAMES[jarName] ?? jarName}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            ({categories.length} categories)
+          </span>
+        </div>
+        <Button variant="ghost" size="sm" onClick={handleReset}>
+          Reset to defaults
+        </Button>
+      </div>
+      <div className="mt-3 space-y-2">
+        {categories.map((cat) => (
+          <div key={cat._id} className="flex items-center gap-2">
+            {editingId === cat._id ? (
+              <>
+                <Input
+                  value={editingName}
+                  onChange={(e) => setEditingName(e.target.value)}
+                  className="h-8 text-sm"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleRename(cat._id)
+                    if (e.key === "Escape") setEditingId(null)
+                  }}
+                  autoFocus
+                />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleRename(cat._id)}
+                  disabled={!editingName.trim()}
+                >
+                  Save
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setEditingId(null)}
+                >
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <>
+                <span
+                  className="flex-1 text-sm cursor-pointer hover:underline"
+                  onClick={() => {
+                    setEditingId(cat._id)
+                    setEditingName(cat.name)
+                  }}
+                >
+                  {cat.name}
+                </span>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                  onClick={() => handleDelete(cat._id)}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </>
+            )}
+          </div>
+        ))}
+        <div className="flex items-center gap-2 pt-1">
+          <Input
+            value={newCategory}
+            onChange={(e) => setNewCategory(e.target.value)}
+            placeholder="New category..."
+            className="h-8 text-sm"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleAdd()
+            }}
+          />
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8"
+            onClick={handleAdd}
+            disabled={!newCategory.trim()}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }

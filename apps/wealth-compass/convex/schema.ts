@@ -35,9 +35,17 @@ export default defineSchema({
     fromJarId: v.optional(v.id("jars")),
     toJarId: v.optional(v.id("jars")),
     note: v.optional(v.string()),
+    categoryId: v.optional(v.id("categories")),
     createdAt: v.number(),
   }).index("by_userId", ["userId"])
     .index("by_userId_createdAt", ["userId", "createdAt"]),
+
+  categories: defineTable({
+    userId: v.id("users"),
+    jarName: v.string(),
+    name: v.string(),
+  }).index("by_userId", ["userId"])
+    .index("by_userId_jarName", ["userId", "jarName"]),
 
   recurringIncomes: defineTable({
     userId: v.id("users"),

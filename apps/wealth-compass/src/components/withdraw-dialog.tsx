@@ -32,10 +32,17 @@ interface WithdrawDialogProps {
 export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
   const [open, setOpen] = useState(false)
   const [selectedJarId, setSelectedJarId] = useState<string>("")
+  const [categoryId, setCategoryId] = useState<string>("")
   const [amount, setAmount] = useState("")
   const [note, setNote] = useState("")
   const [loading, setLoading] = useState(false)
   const jarBalances = useQuery(api.jars.getJarBalances)
+  const categories = useQuery(
+    api.categories.getCategoriesByJar,
+    selectedJarId && jarBalances
+      ? { jarName: jarBalances.find((jb) => jb.jar._id === selectedJarId)?.jar.name ?? "" }
+      : "skip"
+  )
   const withdraw = useMutation(api.transactions.withdraw)
 
   const totalAmount = parseFloat(amount) || 0
@@ -61,12 +68,14 @@ export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
         jarId: selectedJarId as any,
         amount: totalAmount,
         note: note.trim() || undefined,
+        categoryId: categoryId ? (categoryId as any) : undefined,
       })
       toast.success(
         `Withdrew ${formatCurrency(totalAmount, currency)} from ${selectedJar?.jar.name}`,
       )
       setOpen(false)
       setSelectedJarId("")
+      setCategoryId("")
       setAmount("")
       setNote("")
     } catch (error) {
@@ -142,6 +151,23 @@ export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
               onChange={(e) => setNote(e.target.value)}
             />
           </div>
+          {categories && categories.length > 0 && (
+            <div className="space-y-2">
+              <Label>Category (optional)</Label>
+              <Select value={categoryId} onValueChange={(v) => setCategoryId(v ?? "")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choose a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>

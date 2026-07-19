@@ -54,6 +54,7 @@ export const withdraw = mutation({
     jarId: v.id("jars"),
     amount: v.number(),
     note: v.optional(v.string()),
+    categoryId: v.optional(v.id("categories")),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
@@ -93,6 +94,7 @@ export const withdraw = mutation({
       amount: args.amount,
       fromJarId: args.jarId,
       note: args.note,
+      categoryId: args.categoryId,
       createdAt: Date.now(),
     })
 
@@ -106,6 +108,7 @@ export const transfer = mutation({
     toJarId: v.id("jars"),
     amount: v.number(),
     note: v.optional(v.string()),
+    categoryId: v.optional(v.id("categories")),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
@@ -152,6 +155,7 @@ export const transfer = mutation({
       fromJarId: args.fromJarId,
       toJarId: args.toJarId,
       note: args.note,
+      categoryId: args.categoryId,
       createdAt: Date.now(),
     })
 
