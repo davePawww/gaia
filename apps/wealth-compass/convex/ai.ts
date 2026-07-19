@@ -62,7 +62,7 @@ Rules:
       console.log("Spending data keys:", Object.keys(body))
 
       const genAI = new GoogleGenerativeAI(apiKey!)
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" })
       const result = await model.generateContent(prompt)
       const text = result.response.text()
 
@@ -74,13 +74,15 @@ Rules:
       return JSON.parse(jsonMatch[0])
     } catch (error) {
       console.error("Gemini AI error:", error)
+      const isQuotaError = String(error).includes("429") || String(error).includes("quota")
       return {
         insights: [
           {
             type: "info",
-            title: "Could not generate insights",
-            description:
-              "There was an error analyzing your spending data. Please try again later.",
+            title: isQuotaError ? "AI quota exceeded" : "Could not generate insights",
+            description: isQuotaError
+              ? "Free tier quota reached. Add billing at console.cloud.google.com for higher limits, or try again later."
+              : "There was an error analyzing your spending data. Please try again later.",
             severity: "info",
           },
         ],
