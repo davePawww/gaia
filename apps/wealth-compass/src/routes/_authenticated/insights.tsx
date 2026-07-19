@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { createFileRoute } from "@tanstack/react-router"
-import { useQuery, useConvexAction } from "convex/react"
+import { useQuery, useAction } from "convex/react"
 import { api } from "../../../convex/_generated/api"
 import { Skeleton } from "@gaia/ui/components/skeleton"
 import {
@@ -52,7 +52,7 @@ function InsightsPage() {
   const summaryStats = useQuery(api.insights.getSummaryStats, { days: 30 })
   const monthComparison = useQuery(api.insights.getMonthComparison)
 
-  const generateInsights = useConvexAction(api.ai.generateInsights)
+  const generateInsights = useAction(api.ai.generateInsights)
 
   const isLoading =
     spendingByJar === undefined ||
