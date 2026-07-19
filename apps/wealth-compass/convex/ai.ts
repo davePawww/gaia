@@ -71,13 +71,16 @@ Rules:
 
     try {
       const apiKey = process.env.GEMINI_API_KEY
-      console.log("Gemini API key present:", !!apiKey)
+      console.log("[AI] Starting - API key present:", !!apiKey)
+      console.log("[AI] Prompt length:", prompt.length)
 
       const genAI = new GoogleGenerativeAI(apiKey!)
       const model = genAI.getGenerativeModel({ model: "gemma-4-26b-a4b-it" })
+      console.log("[AI] Calling Gemini API...")
       const result = await model.generateContent(prompt)
+      console.log("[AI] Got response")
       const text = result.response.text()
-      console.log("Gemini raw response:", text.slice(0, 500))
+      console.log("[AI] Response text:", text.slice(0, 300))
 
       let jsonStr = text
 
@@ -93,7 +96,8 @@ Rules:
 
       return JSON.parse(jsonStr)
     } catch (error) {
-      console.error("Gemini AI error:", error)
+      console.error("[AI] ERROR:", JSON.stringify(error, null, 2))
+      console.error("[AI] Error string:", String(error))
       const isQuotaError = String(error).includes("429") || String(error).includes("quota")
       return {
         insights: [
