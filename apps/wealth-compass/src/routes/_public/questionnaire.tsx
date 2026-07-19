@@ -12,7 +12,7 @@ import { cn } from "@gaia/ui/lib/utils"
 
 function IntroScreen({ onStart }: { onStart: () => void }) {
   return (
-    <div className="flex h-screen flex-col items-center justify-center px-6">
+    <div className="flex flex-1 flex-col items-center justify-center px-6">
       <div className="flex max-w-lg flex-col items-center text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
           <Sparkles className="h-8 w-8 text-primary" />
@@ -84,7 +84,7 @@ function QuestionScreen({
   const progress = ((currentQuestion + 1) / QUESTIONS.length) * 100
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex flex-1 flex-col bg-background">
       {/* Header */}
       <div className="shrink-0 border-b">
         <div className="mx-auto flex h-12 max-w-2xl items-center justify-between px-4">

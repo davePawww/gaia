@@ -36,7 +36,7 @@ function PublicLayout() {
     : "U"
 
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <Header>
         <HeaderLeft>
           <Link to="/" className="text-lg font-black tracking-tighter font-logo">
@@ -147,7 +147,7 @@ function PublicLayout() {
           </SheetContent>
         </Sheet>
       </Header>
-      <main>
+      <main className="flex flex-1 flex-col">
         <Outlet />
       </main>
       <footer className="w-full border-t border-border bg-background py-5">
