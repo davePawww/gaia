@@ -163,6 +163,34 @@ export const transfer = mutation({
   },
 })
 
+export const addToJar = mutation({
+  args: {
+    jarId: v.id("jars"),
+    amount: v.number(),
+    note: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx)
+    if (!userId) throw new Error("Not authenticated")
+
+    if (args.amount <= 0) throw new Error("Amount must be positive")
+
+    const jar = await ctx.db.get(args.jarId)
+    if (!jar || jar.userId !== userId) throw new Error("Jar not found")
+
+    await ctx.db.insert("transactions", {
+      userId,
+      type: "income",
+      amount: args.amount,
+      toJarId: args.jarId,
+      note: args.note,
+      createdAt: Date.now(),
+    })
+
+    return { success: true }
+  },
+})
+
 export const getUserTransactions = query({
   args: {},
   handler: async (ctx) => {

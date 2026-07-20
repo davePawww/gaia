@@ -13,6 +13,7 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   ArrowRightLeft,
+  CircleDollarSign,
   Plus,
   Trash2,
 } from "lucide-react"
@@ -21,6 +22,7 @@ import { formatCurrency } from "@wealth-compass/lib/currency"
 import { AllocateIncomeDialog } from "@wealth-compass/components/allocate-income-dialog"
 import { WithdrawDialog } from "@wealth-compass/components/withdraw-dialog"
 import { TransferDialog } from "@wealth-compass/components/transfer-dialog"
+import { AddToJarDialog } from "@wealth-compass/components/add-to-jar-dialog"
 import { Button } from "@gaia/ui/components/button"
 import { toast } from "sonner"
 import { useState } from "react"
@@ -80,6 +82,12 @@ function TransactionsPage() {
               Allocate Income
             </Button>
           </AllocateIncomeDialog>
+          <AddToJarDialog currency={currency}>
+            <Button size="sm" variant="outline">
+              <CircleDollarSign className="mr-1 h-4 w-4" />
+              Add to Jar
+            </Button>
+          </AddToJarDialog>
           <TransferDialog currency={currency}>
             <Button size="sm" variant="outline">
               <ArrowRightLeft className="mr-1 h-4 w-4" />
