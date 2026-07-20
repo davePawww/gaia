@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { createFileRoute } from "@tanstack/react-router"
 import { useQuery, useAction } from "convex/react"
 import { api } from "../../../convex/_generated/api"
+import { JAR_FULL_NAMES } from "../../../convex/constants"
 import { Skeleton } from "@gaia/ui/components/skeleton"
 import { getStoredCurrency, getCurrencySymbol } from "@wealth-compass/lib/currency"
 import {
@@ -149,7 +150,11 @@ function InsightsPage() {
         <h1 className="text-2xl font-bold">Spending Insights</h1>
         <Select value={selectedJar} onValueChange={(v) => setSelectedJar(v ?? "all")}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by Jar" />
+            <SelectValue placeholder="Filter by Jar">
+              {selectedJar === "all"
+                ? "All Jars"
+                : (JAR_FULL_NAMES[selectedJar] ?? selectedJar)}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Jars</SelectItem>

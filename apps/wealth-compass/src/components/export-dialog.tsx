@@ -56,6 +56,18 @@ function downloadFile(content: string, filename: string, mimeType: string) {
   URL.revokeObjectURL(url)
 }
 
+const TYPE_LABELS: Record<string, string> = {
+  all: "All Types",
+  income: "Income",
+  withdrawal: "Withdrawal",
+  transfer: "Transfer",
+}
+
+const FORMAT_LABELS: Record<string, string> = {
+  csv: "CSV (.csv)",
+  json: "JSON (.json)",
+}
+
 export function ExportDialog({ currency, children }: ExportDialogProps) {
   const [open, setOpen] = useState(false)
   const [dateFrom, setDateFrom] = useState("")
@@ -172,7 +184,9 @@ export function ExportDialog({ currency, children }: ExportDialogProps) {
             <Label>Transaction Type</Label>
             <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v ?? "all")}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="All Types" />
+                <SelectValue placeholder="All Types">
+                  {TYPE_LABELS[typeFilter] ?? "All Types"}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
@@ -186,7 +200,11 @@ export function ExportDialog({ currency, children }: ExportDialogProps) {
             <Label>Jar</Label>
             <Select value={jarFilter} onValueChange={(v) => setJarFilter(v ?? "all")}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="All Jars" />
+                <SelectValue placeholder="All Jars">
+                  {jarFilter === "all"
+                    ? "All Jars"
+                    : (JAR_FULL_NAMES[jarBalances?.find((jb) => jb.jar._id === jarFilter)?.jar.name ?? ""] ?? "All Jars")}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Jars</SelectItem>
@@ -208,7 +226,9 @@ export function ExportDialog({ currency, children }: ExportDialogProps) {
             <Label>Format</Label>
             <Select value={format} onValueChange={(v) => setFormat(v ?? "csv")}>
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <SelectValue placeholder="CSV (.csv)">
+                  {FORMAT_LABELS[format] ?? "CSV (.csv)"}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="csv">CSV (.csv)</SelectItem>
