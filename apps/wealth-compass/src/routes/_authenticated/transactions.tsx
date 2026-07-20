@@ -14,6 +14,7 @@ import {
   ArrowUpRight,
   ArrowRightLeft,
   CircleDollarSign,
+  Download,
   Plus,
   Trash2,
 } from "lucide-react"
@@ -23,6 +24,7 @@ import { AllocateIncomeDialog } from "@wealth-compass/components/allocate-income
 import { WithdrawDialog } from "@wealth-compass/components/withdraw-dialog"
 import { TransferDialog } from "@wealth-compass/components/transfer-dialog"
 import { AddToJarDialog } from "@wealth-compass/components/add-to-jar-dialog"
+import { ExportDialog } from "@wealth-compass/components/export-dialog"
 import { Button } from "@gaia/ui/components/button"
 import { toast } from "sonner"
 import { useState } from "react"
@@ -100,6 +102,12 @@ function TransactionsPage() {
               Withdraw
             </Button>
           </WithdrawDialog>
+          <ExportDialog currency={currency}>
+            <Button size="sm" variant="outline">
+              <Download className="mr-1 h-4 w-4" />
+              Export
+            </Button>
+          </ExportDialog>
         </div>
       </div>
 
