@@ -160,7 +160,7 @@ function InsightsPage() {
             <SelectItem value="all">All Jars</SelectItem>
             {jarNames.map((name) => (
               <SelectItem key={name} value={name}>
-                {name}
+                {JAR_FULL_NAMES[name] ?? name}
               </SelectItem>
             ))}
           </SelectContent>
