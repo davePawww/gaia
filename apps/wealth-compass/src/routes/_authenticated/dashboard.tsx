@@ -31,7 +31,7 @@ import { AllocateIncomeDialog } from "@wealth-compass/components/allocate-income
 import { WithdrawDialog } from "@wealth-compass/components/withdraw-dialog"
 import { TransferDialog } from "@wealth-compass/components/transfer-dialog"
 import { useCurrency } from "@wealth-compass/lib/use-currency"
-import { formatCurrency } from "@wealth-compass/lib/currency"
+import { formatCurrency, type CurrencyCode } from "@wealth-compass/lib/currency"
 
 const JAR_COLORS: Record<string, string> = {
   NEC: "#EF4444",
@@ -42,7 +42,7 @@ const JAR_COLORS: Record<string, string> = {
   FFA: "#F59E0B",
 }
 
-function SpendingInsightsCard({ currency }: { currency: string }) {
+function SpendingInsightsCard({ currency }: { currency: CurrencyCode }) {
   const spendingByJar = useQuery(api.insights.getSpendingByJar, { days: 30 })
   const summaryStats = useQuery(api.insights.getSummaryStats, { days: 30 })
 

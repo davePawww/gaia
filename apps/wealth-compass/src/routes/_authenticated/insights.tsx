@@ -97,10 +97,10 @@ function InsightsPage() {
         if (!cancelled) {
           setAiInsights(result.insights)
           const isError = result.insights?.some(
-            (i) =>
-              i.title === "Could not generate insights" ||
-              i.title === "AI quota exceeded" ||
-              i.title === "AI insights unavailable",
+            (insight: { title: string }) =>
+              insight.title === "Could not generate insights" ||
+              insight.title === "AI quota exceeded" ||
+              insight.title === "AI insights unavailable",
           )
           if (!isError) {
             localStorage.setItem(
@@ -147,7 +147,7 @@ function InsightsPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold">Spending Insights</h1>
-        <Select value={selectedJar} onValueChange={setSelectedJar}>
+        <Select value={selectedJar} onValueChange={(v) => setSelectedJar(v ?? "all")}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter by jar" />
           </SelectTrigger>
