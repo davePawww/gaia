@@ -12,9 +12,11 @@ export const generateInsights = action({
     incomeVsSpending: v.any(),
     summaryStats: v.any(),
     monthComparison: v.any(),
+    currency: v.string(),
   },
   handler: async (_ctx, args) => {
     const body = args
+    const sym = body.currency
 
     if (!process.env.GEMINI_API_KEY) {
       return {
@@ -30,13 +32,14 @@ export const generateInsights = action({
       }
     }
 
+    const fmt = (n: number) => `${sym}${n.toFixed(2)}`
     const summary = {
-      spendingByJar: body.spendingByJar?.map((j: any) => `${j.jarName}: $${j.total.toFixed(2)}`).join(", ") || "none",
-      spendingByCategory: body.spendingByCategory?.slice(0, 10).map((c: any) => `${c.categoryName} (${c.jarName}): $${c.total.toFixed(2)}`).join(", ") || "none",
-      monthlyTrends: body.monthlyTrends?.map((t: any) => `${t.month} ${t.jarName}: $${t.total.toFixed(2)}`).join(", ") || "none",
-      incomeVsSpending: body.incomeVsSpending?.map((m: any) => `${m.month}: income $${m.income.toFixed(2)}, spending $${m.spending.toFixed(2)}`).join(", ") || "none",
-      summaryStats: body.summaryStats ? `Total: $${body.summaryStats.totalSpending?.toFixed(2)}, Avg daily: $${body.summaryStats.avgDaily?.toFixed(2)}, Velocity: ${body.summaryStats.velocity?.toFixed(1)}%` : "none",
-      monthComparison: body.monthComparison ? `Current: income $${body.monthComparison.current?.income?.toFixed(2)}, spending $${body.monthComparison.current?.spending?.toFixed(2)}. Previous: income $${body.monthComparison.previous?.income?.toFixed(2)}, spending $${body.monthComparison.previous?.spending?.toFixed(2)}` : "none",
+      spendingByJar: body.spendingByJar?.map((j: any) => `${j.jarName}: ${fmt(j.total)}`).join(", ") || "none",
+      spendingByCategory: body.spendingByCategory?.slice(0, 10).map((c: any) => `${c.categoryName} (${c.jarName}): ${fmt(c.total)}`).join(", ") || "none",
+      monthlyTrends: body.monthlyTrends?.map((t: any) => `${t.month} ${t.jarName}: ${fmt(t.total)}`).join(", ") || "none",
+      incomeVsSpending: body.incomeVsSpending?.map((m: any) => `${m.month}: income ${fmt(m.income)}, spending ${fmt(m.spending)}`).join(", ") || "none",
+      summaryStats: body.summaryStats ? `Total: ${fmt(body.summaryStats.totalSpending)}, Avg daily: ${fmt(body.summaryStats.avgDaily)}, Velocity: ${body.summaryStats.velocity?.toFixed(1)}%` : "none",
+      monthComparison: body.monthComparison ? `Current: income ${fmt(body.monthComparison.current?.income)}, spending ${fmt(body.monthComparison.current?.spending)}. Previous: income ${fmt(body.monthComparison.previous?.income)}, spending ${fmt(body.monthComparison.previous?.spending)}` : "none",
     }
 
     const prompt = `Analyze this financial data and provide 3-5 actionable insights.
@@ -53,33 +56,21 @@ Return ONLY a JSON object (no markdown, no explanation):
 
 Focus on changes >10%, savings vs overspending, anomalies. Be specific with numbers.`
 
-    try {
-      const apiKey = process.env.GEMINI_API_KEY
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+    const model = genAI.getGenerativeModel({ model: "gemma-4-26b-a4b-it" })
+    const result = await model.generateContent(prompt)
+    const text = result.response.text()
 
-      const genAI = new GoogleGenerativeAI(apiKey!)
-      const model = genAI.getGenerativeModel({ model: "gemma-4-26b-a4b-it" })
-
-      const result = await model.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: "application/json" },
-      })
-
-      const text = result.response.text()
-      return JSON.parse(text)
-    } catch (error) {
-      const isQuotaError = String(error).includes("429") || String(error).includes("quota")
-      return {
-        insights: [
-          {
-            type: "info",
-            title: isQuotaError ? "AI quota exceeded" : "Could not generate insights",
-            description: isQuotaError
-              ? "Free tier quota reached. Add billing at console.cloud.google.com for higher limits, or try again later."
-              : "There was an error analyzing your spending data. Please try again later.",
-            severity: "info",
-          },
-        ],
-      }
+    let jsonStr = text
+    const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/)
+    if (codeBlockMatch) {
+      jsonStr = codeBlockMatch[1].trim()
     }
+    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/)
+    if (jsonMatch) {
+      jsonStr = jsonMatch[0]
+    }
+
+    return JSON.parse(jsonStr)
   },
 })

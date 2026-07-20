@@ -1,10 +1,11 @@
+import { useCallback, useEffect, useRef, useState } from "react"
 import { Card, CardContent } from "@gaia/ui/components/card"
-import { Skeleton } from "@gaia/ui/components/skeleton"
 import {
   TrendingUp,
   AlertTriangle,
   CheckCircle,
   Lightbulb,
+  Loader2,
 } from "lucide-react"
 
 interface Insight {
@@ -35,6 +36,17 @@ const SEVERITY_ICON_COLOR: Record<string, string> = {
   alert: "text-red-500",
 }
 
+const LOADING_MESSAGES = [
+  "Analyzing your spending patterns...",
+  "Comparing month-over-month trends...",
+  "Evaluating jar allocations...",
+  "Checking for unusual activity...",
+  "Calculating savings velocity...",
+  "Generating personalized insights...",
+  "Reviewing category breakdowns...",
+  "Almost there...",
+]
+
 export function AiInsightsSection({
   insights,
   isLoading,
@@ -42,21 +54,51 @@ export function AiInsightsSection({
   insights: Insight[] | undefined
   isLoading: boolean
 }) {
+  const [messageIndex, setMessageIndex] = useState(0)
+  const [animState, setAnimState] = useState<"entering" | "visible" | "leaving">("visible")
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  const cycleMessage = useCallback(() => {
+    setAnimState("leaving")
+    timeoutRef.current = setTimeout(() => {
+      setMessageIndex((i) => (i + 1) % LOADING_MESSAGES.length)
+      setAnimState("entering")
+      timeoutRef.current = setTimeout(() => setAnimState("visible"), 400)
+    }, 400)
+  }, [])
+
+  useEffect(() => {
+    if (!isLoading) return
+    setAnimState("entering")
+    const id = setTimeout(() => setAnimState("visible"), 400)
+    const interval = setInterval(cycleMessage, 4000)
+    return () => {
+      clearTimeout(id)
+      clearInterval(interval)
+      clearTimeout(timeoutRef.current)
+    }
+  }, [isLoading, cycleMessage])
+
   if (isLoading) {
+    const opacity = animState === "visible" ? "1" : "0"
+    const translateY = animState === "entering" ? "8px" : animState === "leaving" ? "-8px" : "0"
+
     return (
-      <div className="space-y-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i}>
-            <CardContent className="flex gap-4 p-4">
-              <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-48" />
-                <Skeleton className="h-3 w-full" />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <Card>
+        <CardContent className="flex flex-col items-center gap-4 py-10">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p
+            className="text-sm text-muted-foreground"
+            style={{
+              opacity,
+              transform: `translateY(${translateY})`,
+              transition: "opacity 400ms ease, transform 400ms ease",
+            }}
+          >
+            {LOADING_MESSAGES[messageIndex]}
+          </p>
+        </CardContent>
+      </Card>
     )
   }
 

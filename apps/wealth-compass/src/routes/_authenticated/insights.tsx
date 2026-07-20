@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router"
 import { useQuery, useAction } from "convex/react"
 import { api } from "../../../convex/_generated/api"
 import { Skeleton } from "@gaia/ui/components/skeleton"
+import { getStoredCurrency, getCurrencySymbol } from "@wealth-compass/lib/currency"
 import {
   Select,
   SelectContent,
@@ -91,6 +92,7 @@ function InsightsPage() {
           incomeVsSpending,
           summaryStats,
           monthComparison,
+          currency: getCurrencySymbol(getStoredCurrency()),
         })
         if (!cancelled) {
           setAiInsights(result.insights)
