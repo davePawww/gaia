@@ -172,10 +172,10 @@ export function ExportDialog({ currency, children }: ExportDialogProps) {
             <Label>Transaction Type</Label>
             <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v ?? "all")}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="All types" />
+                <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All types</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="income">Income</SelectItem>
                 <SelectItem value="withdrawal">Withdrawal</SelectItem>
                 <SelectItem value="transfer">Transfer</SelectItem>
@@ -186,10 +186,10 @@ export function ExportDialog({ currency, children }: ExportDialogProps) {
             <Label>Jar</Label>
             <Select value={jarFilter} onValueChange={(v) => setJarFilter(v ?? "all")}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="All jars" />
+                <SelectValue placeholder="All Jars" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All jars</SelectItem>
+                <SelectItem value="all">All Jars</SelectItem>
                 {jarBalances?.map((jb) => (
                   <SelectItem key={jb.jar._id} value={jb.jar._id}>
                     <div className="flex items-center gap-2">

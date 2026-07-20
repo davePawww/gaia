@@ -116,7 +116,7 @@ function SignInPage() {
           className="w-full"
           onClick={handleGoogleSignIn}
         >
-          Sign in with Google
+          Sign In with Google
         </Button>
         <p className="text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}

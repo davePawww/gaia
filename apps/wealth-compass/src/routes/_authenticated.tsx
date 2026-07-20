@@ -95,7 +95,7 @@ function AuthenticatedLayout() {
             </SidebarGroupContent>
           </SidebarGroup>
           <SidebarGroup>
-            <SidebarGroupLabel>submenu</SidebarGroupLabel>
+            <SidebarGroupLabel>Submenu</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {secondaryNav.map((item) => (

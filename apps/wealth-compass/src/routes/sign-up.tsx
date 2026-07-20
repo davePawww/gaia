@@ -152,7 +152,7 @@ function SignUpPage() {
           className="w-full"
           onClick={handleGoogleSignUp}
         >
-          Sign up with Google
+          Sign Up with Google
         </Button>
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{" "}

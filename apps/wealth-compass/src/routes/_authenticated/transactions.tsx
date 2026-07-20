@@ -123,8 +123,8 @@ function TransactionsPage() {
                   onChange={(e) => setFilterCategory(e.target.value)}
                   className="rounded-md border bg-background px-2 py-1 text-xs"
                 >
-                  <option value="all">All categories</option>
-                  <option value="none">No category</option>
+                  <option value="all">All Categories</option>
+                  <option value="none">No Category</option>
                   {[...new Set(categories.map((c) => c.jarName))].map((jarName) => (
                     <optgroup key={jarName} label={jarName}>
                       {categories

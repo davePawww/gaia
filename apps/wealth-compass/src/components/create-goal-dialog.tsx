@@ -116,7 +116,7 @@ export function CreateGoalDialog({ currency: _currency, children }: CreateGoalDi
             >
               <SelectTrigger className="w-full">
                 <SelectValue>
-                  {GOAL_TYPE_LABELS[type] ?? "Select type"}
+                  {GOAL_TYPE_LABELS[type] ?? "Select Type"}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>

@@ -327,7 +327,7 @@ function CategorySettings({
           </span>
         </div>
         <Button variant="ghost" size="sm" onClick={handleReset}>
-          Reset to defaults
+Reset to Defaults
         </Button>
       </div>
       <div className="mt-3 space-y-2">

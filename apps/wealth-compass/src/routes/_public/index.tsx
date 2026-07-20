@@ -102,7 +102,7 @@ function LandingPage() {
           </Link>
           <Link to="/how-it-works">
             <Button size="lg" variant="outline">
-              See How it Works
+              See How It Works
             </Button>
           </Link>
         </div>

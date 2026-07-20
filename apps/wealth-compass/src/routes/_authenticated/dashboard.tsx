@@ -100,7 +100,7 @@ function SpendingInsightsCard({ currency }: { currency: CurrencyCode }) {
               ))}
             </div>
             <div className="flex items-center justify-between border-t pt-3">
-              <span className="text-sm text-muted-foreground">Total spent</span>
+              <span className="text-sm text-muted-foreground">Total Spent</span>
               <span className="text-lg font-bold">
                 {formatCurrency(totalSpent, currency)}
               </span>
@@ -227,7 +227,7 @@ function DashboardPage() {
               <div className="text-2xl font-bold">
                 {formatCurrency(totalRecentIncome, currency)}
               </div>
-              <p className="text-xs text-muted-foreground">Lifetime income</p>
+              <p className="text-xs text-muted-foreground">Lifetime Income</p>
             </CardContent>
           </Card>
           <Card>
@@ -241,7 +241,7 @@ function DashboardPage() {
               <div className="text-2xl font-bold">
                 {transactions?.length ?? 0}
               </div>
-              <p className="text-xs text-muted-foreground">All time</p>
+              <p className="text-xs text-muted-foreground">All Time</p>
             </CardContent>
           </Card>
           <Card>
