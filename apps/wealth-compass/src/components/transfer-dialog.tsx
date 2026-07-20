@@ -110,10 +110,10 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
             <Label>From Jar</Label>
             <Select value={fromJarId} onValueChange={(v) => setFromJarId(v ?? "")}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select source jar">
+                <SelectValue placeholder="Select Source Jar">
                   {fromJarId && jarBalances
-                    ? (JAR_FULL_NAMES[jarBalances.find(jb => jb.jar._id === fromJarId)?.jar.name ?? ""] ?? "Select source jar")
-                    : "Select source jar"}
+                    ? (JAR_FULL_NAMES[jarBalances.find(jb => jb.jar._id === fromJarId)?.jar.name ?? ""] ?? "Select Source Jar")
+                    : "Select Source Jar"}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -143,10 +143,10 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
             <Label>To Jar</Label>
             <Select value={toJarId} onValueChange={(v) => setToJarId(v ?? "")}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select destination jar">
+                <SelectValue placeholder="Select Destination Jar">
                   {toJarId && jarBalances
-                    ? (JAR_FULL_NAMES[jarBalances.find(jb => jb.jar._id === toJarId)?.jar.name ?? ""] ?? "Select destination jar")
-                    : "Select destination jar"}
+                    ? (JAR_FULL_NAMES[jarBalances.find(jb => jb.jar._id === toJarId)?.jar.name ?? ""] ?? "Select Destination Jar")
+                    : "Select Destination Jar"}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -202,7 +202,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
               <Label>Category (optional)</Label>
               <Select value={categoryId} onValueChange={(v) => setCategoryId(v ?? "")}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Choose a category" />
+                  <SelectValue placeholder="Choose a Category" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (

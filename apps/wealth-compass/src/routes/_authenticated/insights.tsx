@@ -149,7 +149,7 @@ function InsightsPage() {
         <h1 className="text-2xl font-bold">Spending Insights</h1>
         <Select value={selectedJar} onValueChange={(v) => setSelectedJar(v ?? "all")}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by jar" />
+            <SelectValue placeholder="Filter by Jar" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Jars</SelectItem>

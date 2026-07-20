@@ -101,10 +101,10 @@ export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
             <Label>Select Jar</Label>
             <Select value={selectedJarId} onValueChange={(v) => setSelectedJarId(v ?? "")}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Choose a jar">
+                <SelectValue placeholder="Choose a Jar">
                   {selectedJarId && jarBalances
-                    ? (JAR_FULL_NAMES[jarBalances.find(jb => jb.jar._id === selectedJarId)?.jar.name ?? ""] ?? "Choose a jar")
-                    : "Choose a jar"}
+                    ? (JAR_FULL_NAMES[jarBalances.find(jb => jb.jar._id === selectedJarId)?.jar.name ?? ""] ?? "Choose a Jar")
+                    : "Choose a Jar"}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -156,7 +156,7 @@ export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
               <Label>Category (optional)</Label>
               <Select value={categoryId} onValueChange={(v) => setCategoryId(v ?? "")}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Choose a category" />
+                  <SelectValue placeholder="Choose a Category" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (
