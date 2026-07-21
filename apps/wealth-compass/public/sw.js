@@ -26,15 +26,6 @@ self.addEventListener("notificationclick", (event) => {
 
 self.addEventListener("pushsubscriptionchange", (event) => {
   event.waitUntil(
-    self.registration.pushManager.subscribe(event.oldSubscription.options).then((subscription) => {
-      return fetch("/api/push-renew", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          oldEndpoint: event.oldSubscription.endpoint,
-          newSubscription: subscription.toJSON(),
-        }),
-      });
-    })
+    self.registration.pushManager.subscribe(event.oldSubscription.options)
   );
 });

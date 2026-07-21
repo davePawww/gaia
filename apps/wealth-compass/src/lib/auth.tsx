@@ -1,8 +1,10 @@
 import { ConvexAuthProvider } from "@convex-dev/auth/react"
 import { ConvexReactClient } from "convex/react"
 import type { PropsWithChildren } from "react"
+import { setConvexClient } from "./notifications"
 
 export const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL)
+setConvexClient(convex)
 
 export function AuthProvider({ children }: PropsWithChildren) {
   return (
