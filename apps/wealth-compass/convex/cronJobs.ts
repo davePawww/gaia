@@ -1,0 +1,113 @@
+import { internalMutation } from "./_generated/server";
+import { JAR_FULL_NAMES } from "./constants";
+
+export const checkIncomeAllocationReminder = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    // Find all users with income allocation reminder enabled
+    const allPrefs = await ctx.db.query("notificationPreferences").collect();
+    const enabledPrefs = allPrefs.filter((p) => p.incomeAllocationReminder);
+
+    for (const prefs of enabledPrefs) {
+      // Check if user has any income this month
+      const now = Date.now();
+      const monthStart = new Date(now);
+      monthStart.setDate(1);
+      monthStart.setHours(0, 0, 0, 0);
+
+      const transactions = await ctx.db
+        .query("transactions")
+        .withIndex("by_userId", (q) => q.eq("userId", prefs.userId))
+        .collect();
+
+      const hasIncomeThisMonth = transactions.some(
+        (t) => t.type === "income" && t.createdAt >= monthStart.getTime()
+      );
+
+      if (!hasIncomeThisMonth) {
+        // Check if we already sent a reminder today
+        const existingToday = await ctx.db
+          .query("notifications")
+          .withIndex("by_userId", (q) => q.eq("userId", prefs.userId))
+          .collect();
+
+        const todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
+
+        const alreadyReminded = existingToday.some(
+          (n) =>
+            n.type === "income_allocation_reminder" &&
+            n.createdAt >= todayStart.getTime()
+        );
+
+        if (!alreadyReminded) {
+          await ctx.db.insert("notifications", {
+            userId: prefs.userId,
+            type: "income_allocation_reminder",
+            title: "Income Allocation Reminder",
+            body: "You haven't allocated income this month. Tap to add your income.",
+            read: false,
+            createdAt: now,
+          });
+        }
+      }
+    }
+  },
+});
+
+export const sendMonthlySpendingSummary = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const allPrefs = await ctx.db.query("notificationPreferences").collect();
+    const enabledPrefs = allPrefs.filter((p) => p.monthlySpendingSummary);
+
+    const now = Date.now();
+    const lastMonth = new Date(now);
+    lastMonth.setMonth(lastMonth.getMonth() - 1);
+    const lastMonthStart = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1);
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    for (const prefs of enabledPrefs) {
+      const transactions = await ctx.db
+        .query("transactions")
+        .withIndex("by_userId", (q) => q.eq("userId", prefs.userId))
+        .collect();
+
+      const lastMonthWithdrawals = transactions.filter(
+        (t) =>
+          t.type === "withdrawal" &&
+          t.createdAt >= lastMonthStart.getTime() &&
+          t.createdAt < thisMonthStart.getTime()
+      );
+
+      const totalSpent = lastMonthWithdrawals.reduce((sum, t) => sum + t.amount, 0);
+
+      const byJar: Record<string, number> = {};
+      for (const t of lastMonthWithdrawals) {
+        if (t.fromJarId) {
+          const jar = await ctx.db.get(t.fromJarId);
+          if (jar) {
+            byJar[jar.name] = (byJar[jar.name] ?? 0) + t.amount;
+          }
+        }
+      }
+
+      const jarBreakdown = Object.entries(byJar)
+        .map(([name, amount]) => `${JAR_FULL_NAMES[name] ?? name}: $${amount.toFixed(2)}`)
+        .join(", ");
+
+      const monthName = lastMonth.toLocaleString("en-US", { month: "long" });
+
+      await ctx.db.insert("notifications", {
+        userId: prefs.userId,
+        type: "monthly_spending_summary",
+        title: `${monthName} Spending Summary`,
+        body: totalSpent > 0
+          ? `Total: $${totalSpent.toFixed(2)}${jarBreakdown ? ` (${jarBreakdown})` : ""}`
+          : `No spending recorded in ${monthName}.`,
+        read: false,
+        createdAt: now,
+      });
+    }
+  },
+});
