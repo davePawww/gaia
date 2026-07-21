@@ -33,6 +33,7 @@ import {
   Settings,
   LogOut,
 } from "lucide-react"
+import { NotificationBell } from "../components/notification-bell"
 import { useQuery } from "convex/react"
 import { api } from "../../convex/_generated/api"
 
@@ -154,7 +155,7 @@ function AuthenticatedLayout() {
         <header className="mb-6 flex items-center justify-between">
           <SidebarTrigger />
           <div className="flex items-center gap-4">
-            {/* User profile summary could go here if needed, but handled by sidebar footer now */}
+            <NotificationBell />
           </div>
         </header>
         <Outlet />
