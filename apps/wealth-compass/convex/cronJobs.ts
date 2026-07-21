@@ -66,7 +66,8 @@ export const sendMonthlySpendingSummary = internalMutation({
     const lastMonth = new Date(now);
     lastMonth.setMonth(lastMonth.getMonth() - 1);
     const lastMonthStart = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1);
-    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const nowDate = new Date(now);
+    const thisMonthStart = new Date(nowDate.getFullYear(), nowDate.getMonth(), 1);
 
     for (const prefs of enabledPrefs) {
       const transactions = await ctx.db
