@@ -4,12 +4,6 @@ import { action } from "../_generated/server";
 import { v } from "convex/values";
 import webPush from "web-push";
 
-webPush.setVapidDetails(
-  "mailto:notifications@wealthcompass.app",
-  process.env.VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
-
 export const sendPush = action({
   args: {
     subscription: v.object({
@@ -23,6 +17,11 @@ export const sendPush = action({
     body: v.string(),
   },
   handler: async (_ctx, args) => {
+    webPush.setVapidDetails(
+      "mailto:notifications@wealthcompass.app",
+      process.env.VAPID_PUBLIC_KEY!,
+      process.env.VAPID_PRIVATE_KEY!
+    );
     try {
       await webPush.sendNotification(
         args.subscription,
