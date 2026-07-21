@@ -1,6 +1,7 @@
 import { mutation, query } from "./_generated/server"
 import { v } from "convex/values"
 import { getAuthUserId } from "@convex-dev/auth/server"
+import { JAR_FULL_NAMES } from "./constants"
 
 export const allocateIncome = mutation({
   args: {
@@ -88,6 +89,26 @@ export const withdraw = mutation({
       throw new Error(
         `Insufficient balance. Available: ${balance}, requested: ${args.amount}`,
       )
+    }
+
+    const prefs = await ctx.db
+      .query("notificationPreferences")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .unique()
+
+    if (prefs?.spendingLimitWarning) {
+      const remainingBalance = balance - args.amount
+      if (remainingBalance < prefs.spendingLimitThreshold) {
+        const jarName = JAR_FULL_NAMES[jar.name] ?? jar.name
+        await ctx.db.insert("notifications", {
+          userId,
+          type: "spending_limit_warning",
+          title: "Spending Limit Warning",
+          body: `Your ${jarName} balance ($${remainingBalance.toFixed(2)}) is below your $${prefs.spendingLimitThreshold} threshold.`,
+          read: false,
+          createdAt: Date.now(),
+        })
+      }
     }
 
     await ctx.db.insert("transactions", {
