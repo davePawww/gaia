@@ -20,7 +20,7 @@ import { CurrencySelector } from "@wealth-compass/components/currency-selector"
 import { PERSONALITY_PRESETS, DEFAULT_JARS, JAR_FULL_NAMES } from "../../../convex/constants"
 import { useState, useEffect } from "react"
 import { Trash2, Plus } from "lucide-react"
-import { NotificationSettings } from "../components/notification-settings"
+import { NotificationSettings } from "../../components/notification-settings"
 
 function SettingsPage() {
   const { theme, setTheme } = useTheme()
