@@ -16,6 +16,7 @@ import type * as goals from "../goals.js";
 import type * as http from "../http.js";
 import type * as insights from "../insights.js";
 import type * as jars from "../jars.js";
+import type * as notifications from "../notifications.js";
 import type * as transactions from "../transactions.js";
 import type * as users from "../users.js";
 
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   insights: typeof insights;
   jars: typeof jars;
+  notifications: typeof notifications;
   transactions: typeof transactions;
   users: typeof users;
 }>;
