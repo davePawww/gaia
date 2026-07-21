@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server"
 import { v } from "convex/values"
 import { getAuthUserId } from "@convex-dev/auth/server"
+import { internal } from "./_generated/api"
 
 export const getUserGoals = query({
   args: {},
@@ -40,7 +41,7 @@ export const createGoal = mutation({
       }
     }
 
-    await ctx.db.insert("goals", {
+    const goalId = await ctx.db.insert("goals", {
       userId,
       name: args.name,
       type: args.type,
@@ -48,6 +49,23 @@ export const createGoal = mutation({
       jarId: args.jarId,
       deadline: args.deadline,
     })
+
+    if (args.deadline) {
+      const prefs = await ctx.db
+        .query("notificationPreferences")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .unique()
+      const daysBefore = prefs?.goalDeadlineDays ?? 7
+      const reminderTime = args.deadline - daysBefore * 24 * 60 * 60 * 1000
+      if (reminderTime > Date.now()) {
+        await ctx.scheduler.runAt(reminderTime, internal.cronJobs.sendGoalDeadlineReminder, {
+          userId,
+          goalId: goalId,
+          goalName: args.name,
+          deadline: args.deadline,
+        })
+      }
+    }
 
     return { success: true }
   },

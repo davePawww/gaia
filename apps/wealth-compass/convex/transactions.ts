@@ -45,6 +45,8 @@ export const allocateIncome = mutation({
       })
     }
 
+    await checkGoalCompletions(ctx, userId)
+
     return { success: true }
   },
 })
@@ -187,6 +189,8 @@ export const addToJar = mutation({
       createdAt: Date.now(),
     })
 
+    await checkGoalCompletions(ctx, userId)
+
     return { success: true }
   },
 })
@@ -220,3 +224,53 @@ export const deleteTransaction = mutation({
     return { success: true }
   },
 })
+
+async function checkGoalCompletions(ctx: any, userId: string) {
+  const goals = await ctx.db
+    .query("goals")
+    .withIndex("by_userId", (q: any) => q.eq("userId", userId))
+    .collect()
+
+  const prefs = await ctx.db
+    .query("notificationPreferences")
+    .withIndex("by_userId", (q: any) => q.eq("userId", userId))
+    .unique()
+
+  if (!prefs?.goalCompleted) return
+
+  for (const goal of goals) {
+    let currentValue = 0
+    if (goal.type === "jar" && goal.jarId) {
+      const transactions = await ctx.db
+        .query("transactions")
+        .withIndex("by_userId", (q: any) => q.eq("userId", userId))
+        .collect()
+      for (const t of transactions) {
+        if (t.type === "income" && t.toJarId === goal.jarId) currentValue += t.amount
+        if (t.type === "withdrawal" && t.fromJarId === goal.jarId) currentValue -= t.amount
+        if (t.type === "transfer" && t.toJarId === goal.jarId) currentValue += t.amount
+        if (t.type === "transfer" && t.fromJarId === goal.jarId) currentValue -= t.amount
+      }
+    }
+
+    if (currentValue >= goal.targetAmount) {
+      const existing = await ctx.db
+        .query("notifications")
+        .withIndex("by_userId", (q: any) => q.eq("userId", userId))
+        .collect()
+      const alreadyNotified = existing.some(
+        (n: any) => n.type === "goal_completed" && n.body.includes(goal.name)
+      )
+      if (!alreadyNotified) {
+        await ctx.db.insert("notifications", {
+          userId,
+          type: "goal_completed",
+          title: "Goal Completed!",
+          body: `You've reached your goal "${goal.name}"!`,
+          read: false,
+          createdAt: Date.now(),
+        })
+      }
+    }
+  }
+}

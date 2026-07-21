@@ -1,4 +1,5 @@
 import { internalMutation } from "./_generated/server";
+import { v } from "convex/values";
 import { JAR_FULL_NAMES } from "./constants";
 
 export const checkIncomeAllocationReminder = internalMutation({
@@ -109,5 +110,37 @@ export const sendMonthlySpendingSummary = internalMutation({
         createdAt: now,
       });
     }
+  },
+});
+
+export const sendGoalDeadlineReminder = internalMutation({
+  args: {
+    userId: v.id("users"),
+    goalId: v.string(),
+    goalName: v.string(),
+    deadline: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const prefs = await ctx.db
+      .query("notificationPreferences")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .unique();
+
+    if (!prefs?.goalDeadlineApproaching) return;
+
+    const deadlineDate = new Date(args.deadline).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+
+    await ctx.db.insert("notifications", {
+      userId: args.userId,
+      type: "goal_deadline_approaching",
+      title: "Goal Deadline Approaching",
+      body: `"${args.goalName}" is due on ${deadlineDate}.`,
+      read: false,
+      createdAt: Date.now(),
+    });
   },
 });
