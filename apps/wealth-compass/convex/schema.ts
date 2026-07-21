@@ -68,4 +68,43 @@ export default defineSchema({
     jarId: v.optional(v.id("jars")),
     deadline: v.optional(v.number()),
   }).index("by_userId", ["userId"]),
+
+  pushSubscriptions: defineTable({
+    userId: v.id("users"),
+    endpoint: v.string(),
+    keys: v.object({
+      p256dh: v.string(),
+      auth: v.string(),
+    }),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_endpoint", ["endpoint"]),
+
+  notificationPreferences: defineTable({
+    userId: v.id("users"),
+    incomeAllocationReminder: v.boolean(),
+    goalDeadlineApproaching: v.boolean(),
+    goalCompleted: v.boolean(),
+    spendingLimitWarning: v.boolean(),
+    monthlySpendingSummary: v.boolean(),
+    spendingLimitThreshold: v.number(),
+    goalDeadlineDays: v.number(),
+  }).index("by_userId", ["userId"]),
+
+  notifications: defineTable({
+    userId: v.id("users"),
+    type: v.union(
+      v.literal("income_allocation_reminder"),
+      v.literal("goal_deadline_approaching"),
+      v.literal("goal_completed"),
+      v.literal("spending_limit_warning"),
+      v.literal("monthly_spending_summary")
+    ),
+    title: v.string(),
+    body: v.string(),
+    read: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_userId_createdAt", ["userId", "createdAt"]),
 })
