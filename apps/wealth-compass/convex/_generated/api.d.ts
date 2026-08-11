@@ -8,10 +8,13 @@
  * @module
  */
 
+import type * as actions_sendPush from "../actions/sendPush.js";
 import type * as ai from "../ai.js";
 import type * as auth from "../auth.js";
 import type * as categories from "../categories.js";
 import type * as constants from "../constants.js";
+import type * as cronJobs from "../cronJobs.js";
+import type * as crons from "../crons.js";
 import type * as goals from "../goals.js";
 import type * as http from "../http.js";
 import type * as insights from "../insights.js";
@@ -27,10 +30,13 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "actions/sendPush": typeof actions_sendPush;
   ai: typeof ai;
   auth: typeof auth;
   categories: typeof categories;
   constants: typeof constants;
+  cronJobs: typeof cronJobs;
+  crons: typeof crons;
   goals: typeof goals;
   http: typeof http;
   insights: typeof insights;
