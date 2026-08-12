@@ -27,7 +27,10 @@ export const { auth, signIn, signOut, store } = convexAuth({
         for (const jar of DEFAULT_JARS) {
           await ctx.db.insert("jars", {
             userId,
-            ...jar,
+            name: jar.name,
+            color: jar.color,
+            percentage: jar.percentage,
+            icon: jar.icon,
           });
         }
       }
