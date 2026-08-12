@@ -60,7 +60,6 @@ function SignUpPage() {
     try {
       await signIn("password", { email, password, name, flow: "signUp" })
       toast.success("Account created successfully!")
-      navigate({ to: "/dashboard" })
     } catch (error) {
       console.error(error)
       toast.error("Failed to create account. Please try again.")

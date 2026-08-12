@@ -40,7 +40,6 @@ function SignInPage() {
     try {
       await signIn("password", { email, password, flow: "signIn" })
       toast.success("Signed in successfully!")
-      navigate({ to: "/dashboard" })
     } catch (error) {
       console.error(error)
       toast.error("Invalid email or password.")

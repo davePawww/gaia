@@ -68,8 +68,19 @@ export const updateJar = mutation({
     icon: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx)
+    if (!userId) throw new Error("Not authenticated")
+
     const { jarId, ...updates } = args
+    const jar = await ctx.db.get(jarId)
+    if (!jar || jar.userId !== userId) throw new Error("Jar not found")
+
+    if (updates.percentage !== undefined && updates.percentage < 0) {
+      throw new Error("Jar percentage cannot be negative")
+    }
+
     await ctx.db.patch(jarId, updates)
+    return { success: true }
   },
 })
 
@@ -85,6 +96,18 @@ export const updateAllJarPercentages = mutation({
       .query("jars")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .collect()
+
+    const totalPercentage = jars.reduce(
+      (total, jar) => total + (args.percentages[jar.name] ?? jar.percentage),
+      0,
+    )
+    if (Math.abs(totalPercentage - 100) > 0.01) {
+      throw new Error("Jar percentages must sum to 100")
+    }
+
+    if (Object.values(args.percentages).some((percentage) => percentage < 0)) {
+      throw new Error("Jar percentages cannot be negative")
+    }
 
     for (const jar of jars) {
       const percentage = args.percentages[jar.name]

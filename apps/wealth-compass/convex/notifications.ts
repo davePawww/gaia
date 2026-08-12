@@ -70,7 +70,11 @@ export const saveSubscription = mutation({
       .withIndex("by_endpoint", (q) => q.eq("endpoint", args.endpoint))
       .unique();
     if (existing) {
-      await ctx.db.delete(existing._id);
+      if (existing.userId !== userId) {
+        throw new Error("Push subscription is already associated with another account");
+      }
+      await ctx.db.patch(existing._id, { keys: args.keys });
+      return { success: true };
     }
     await ctx.db.insert("pushSubscriptions", { userId, ...args });
     return { success: true };
@@ -80,11 +84,13 @@ export const saveSubscription = mutation({
 export const removeSubscription = mutation({
   args: { endpoint: v.string() },
   handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
     const existing = await ctx.db
       .query("pushSubscriptions")
       .withIndex("by_endpoint", (q) => q.eq("endpoint", args.endpoint))
       .unique();
-    if (existing) {
+    if (existing?.userId === userId) {
       await ctx.db.delete(existing._id);
     }
     return { success: true };
