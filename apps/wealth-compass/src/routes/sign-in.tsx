@@ -50,7 +50,7 @@ function SignInPage() {
 
   const handleGoogleSignIn = async () => {
     try {
-      await signIn("google")
+      await signIn("google", { redirectTo: "/dashboard" })
     } catch (error) {
       console.error(error)
       toast.error("Failed to sign in with Google.")
