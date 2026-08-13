@@ -32,8 +32,32 @@ type Insight = {
 
 type InsightResult = { insights: Insight[] }
 
+const INSIGHT_TYPES = new Set<Insight["type"]>([
+  "spending_change",
+  "trend",
+  "positive",
+  "anomaly",
+])
+const INSIGHT_SEVERITIES = new Set<Insight["severity"]>([
+  "info",
+  "warning",
+  "success",
+  "alert",
+])
+
+function isInsight(value: unknown): value is Insight {
+  if (!value || typeof value !== "object") return false
+  const insight = value as Partial<Insight>
+  return (
+    typeof insight.title === "string" &&
+    typeof insight.description === "string" &&
+    INSIGHT_TYPES.has(insight.type as Insight["type"]) &&
+    INSIGHT_SEVERITIES.has(insight.severity as Insight["severity"])
+  )
+}
+
 function parseInsightResult(text: string): InsightResult {
-  let jsonStr = text
+  let jsonStr = text.replace(/<\|.*?\|>/g, "").trim()
   const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/)
   if (codeBlockMatch) {
     jsonStr = codeBlockMatch[1].trim()
@@ -44,12 +68,88 @@ function parseInsightResult(text: string): InsightResult {
     jsonStr = jsonMatch[0]
   }
 
-  const parsed = JSON.parse(jsonStr) as { insights?: Insight[] }
-  if (!Array.isArray(parsed.insights) || parsed.insights.length === 0) {
+  const parsed = JSON.parse(jsonStr) as { insights?: unknown[] }
+  const insights = Array.isArray(parsed.insights)
+    ? parsed.insights.filter(isInsight)
+    : []
+  if (insights.length === 0) {
     throw new Error("AI returned no insights")
   }
 
-  return { insights: parsed.insights }
+  return { insights }
+}
+
+function buildFallbackInsights(body: InsightInput): InsightResult {
+  const sym = body.currency
+  const fmt = (value: number) => `${sym}${value.toFixed(2)}`
+  const insights: Insight[] = []
+  const topCategory = [...(body.spendingByCategory ?? [])].sort(
+    (a, b) => b.total - a.total,
+  )[0]
+  const topJar = [...(body.spendingByJar ?? [])].sort(
+    (a, b) => b.total - a.total,
+  )[0]
+  const velocity = body.summaryStats?.velocity ?? 0
+
+  if (topCategory) {
+    insights.push({
+      type: "trend",
+      title: "Top spending category",
+      description: `${topCategory.categoryName} is your largest category at ${fmt(topCategory.total)} over the last 30 days.`,
+      severity: "info",
+    })
+  }
+
+  if (topJar) {
+    insights.push({
+      type: "trend",
+      title: "Top spending jar",
+      description: `${topJar.jarName} accounts for ${fmt(topJar.total)} of recent spending.`,
+      severity: "info",
+    })
+  }
+
+  if (velocity > 10) {
+    insights.push({
+      type: "spending_change",
+      title: "Spending is trending up",
+      description: `Your daily spending is ${velocity.toFixed(1)}% higher than the previous period.`,
+      severity: "warning",
+    })
+  } else if (velocity < -10) {
+    insights.push({
+      type: "spending_change",
+      title: "Spending is trending down",
+      description: `Your daily spending is ${Math.abs(velocity).toFixed(1)}% lower than the previous period.`,
+      severity: "success",
+    })
+  }
+
+  const current = body.monthComparison?.current
+  const previous = body.monthComparison?.previous
+  if (current && previous && previous.spending > 0) {
+    const monthChange =
+      ((current.spending - previous.spending) / previous.spending) * 100
+    if (Math.abs(monthChange) > 10) {
+      insights.push({
+        type: "spending_change",
+        title: monthChange > 0 ? "Monthly spending increased" : "Monthly spending decreased",
+        description: `This month is ${Math.abs(monthChange).toFixed(1)}% ${monthChange > 0 ? "higher" : "lower"} than last month (${fmt(current.spending)} vs ${fmt(previous.spending)}).`,
+        severity: monthChange > 0 ? "warning" : "success",
+      })
+    }
+  }
+
+  if (insights.length === 0) {
+    insights.push({
+      type: "positive",
+      title: "No spending patterns yet",
+      description: "Add a few transactions and we’ll highlight your biggest trends and changes.",
+      severity: "info",
+    })
+  }
+
+  return { insights: insights.slice(0, 5) }
 }
 
 export const generateInsights = action({
@@ -67,17 +167,7 @@ export const generateInsights = action({
     const sym = body.currency
 
     if (!process.env.GEMINI_API_KEY) {
-      return {
-        insights: [
-          {
-            type: "anomaly",
-            title: "AI insights unavailable",
-            description:
-              "Configure GEMINI_API_KEY to enable AI-powered insights.",
-            severity: "info",
-          },
-        ],
-      }
+      return buildFallbackInsights(body)
     }
 
     const fmt = (n: number) => `${sym}${n.toFixed(2)}`
@@ -104,60 +194,22 @@ Return a JSON object matching this shape:
 
 Focus on changes >10%, savings vs overspending, anomalies. Be specific with numbers.`
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-    const requests = [
-      {
-        // This is a small, structured-analysis task. Flash-Lite avoids the
-        // long inference time of the previous 26B Gemma model.
-        model: "gemini-2.5-flash-lite",
-        generationConfig: {
-          responseMimeType: "application/json",
-          maxOutputTokens: 1_024,
-        },
-        timeout: 20_000,
-      },
-      {
-        // Keep the previously working free-tier model as a compatibility
-        // fallback when Flash-Lite is unavailable for a project or key.
-        model: "gemma-4-26b-a4b-it",
-        generationConfig: {
-          maxOutputTokens: 1_024,
-        },
-        timeout: 90_000,
-      },
-    ] as const
-
-    let lastError: unknown
-    for (const request of requests) {
-      try {
-        const model = genAI.getGenerativeModel(
-          {
-            model: request.model,
-            generationConfig: request.generationConfig,
-          },
-          // Avoid leaving the page in a loading state when a model is not
-          // enabled for the account. The fallback then gets a chance to run.
-          { timeout: request.timeout },
-        )
-        const result = await model.generateContent(prompt)
-        return parseInsightResult(result.response.text())
-      } catch (error) {
-        lastError = error
-        console.warn(`AI insights model failed: ${request.model}`, error)
-      }
-    }
-
-    console.error("All AI insights models failed", lastError)
-    return {
-      insights: [
+    try {
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+      const model = genAI.getGenerativeModel(
         {
-          type: "anomaly",
-          title: "Could not generate insights",
-          description:
-            "AI analysis is temporarily unavailable. Please try again shortly.",
-          severity: "info",
+          // Gemma is the known-working free-tier model for this project. Keep
+          // the request compatible with its hosted API format.
+          model: "gemma-4-26b-a4b-it",
+          generationConfig: { maxOutputTokens: 4_096 },
         },
-      ],
+        { timeout: 90_000 },
+      )
+      const result = await model.generateContent(prompt)
+      return parseInsightResult(result.response.text())
+    } catch (error) {
+      console.warn("AI insights generation failed; using data fallback", error)
+      return buildFallbackInsights(body)
     }
   },
 })
