@@ -70,13 +70,21 @@ Income vs spending: ${summary.incomeVsSpending}
 Summary: ${summary.summaryStats}
 Month comparison: ${summary.monthComparison}
 
-Return ONLY a JSON object (no markdown, no explanation):
+Return a JSON object matching this shape:
 {"insights":[{"type":"spending_change|trend|positive|anomaly","title":"max 50 chars","description":"1-2 sentences","severity":"info|warning|success|alert"}]}
 
 Focus on changes >10%, savings vs overspending, anomalies. Be specific with numbers.`
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-    const model = genAI.getGenerativeModel({ model: "gemma-4-26b-a4b-it" })
+    const model = genAI.getGenerativeModel({
+      // This is a small, structured-analysis task. Flash-Lite avoids the long
+      // inference time of the previous 26B Gemma model.
+      model: "gemini-2.5-flash-lite",
+      generationConfig: {
+        responseMimeType: "application/json",
+        maxOutputTokens: 750,
+      },
+    })
     const result = await model.generateContent(prompt)
     const text = result.response.text()
 
