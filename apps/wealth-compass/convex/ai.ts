@@ -23,6 +23,35 @@ type InsightInput = {
   currency: string
 }
 
+type Insight = {
+  type: "spending_change" | "trend" | "positive" | "anomaly"
+  title: string
+  description: string
+  severity: "info" | "warning" | "success" | "alert"
+}
+
+type InsightResult = { insights: Insight[] }
+
+function parseInsightResult(text: string): InsightResult {
+  let jsonStr = text
+  const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/)
+  if (codeBlockMatch) {
+    jsonStr = codeBlockMatch[1].trim()
+  }
+
+  const jsonMatch = jsonStr.match(/\{[\s\S]*\}/)
+  if (jsonMatch) {
+    jsonStr = jsonMatch[0]
+  }
+
+  const parsed = JSON.parse(jsonStr) as { insights?: Insight[] }
+  if (!Array.isArray(parsed.insights) || parsed.insights.length === 0) {
+    throw new Error("AI returned no insights")
+  }
+
+  return { insights: parsed.insights }
+}
+
 export const generateInsights = action({
   args: {
     spendingByJar: v.any(),
@@ -33,7 +62,7 @@ export const generateInsights = action({
     monthComparison: v.any(),
     currency: v.string(),
   },
-  handler: async (_ctx, args) => {
+  handler: async (_ctx, args): Promise<InsightResult> => {
     const body = args as unknown as InsightInput
     const sym = body.currency
 
@@ -41,7 +70,7 @@ export const generateInsights = action({
       return {
         insights: [
           {
-            type: "info",
+            type: "anomaly",
             title: "AI insights unavailable",
             description:
               "Configure GEMINI_API_KEY to enable AI-powered insights.",
@@ -76,28 +105,59 @@ Return a JSON object matching this shape:
 Focus on changes >10%, savings vs overspending, anomalies. Be specific with numbers.`
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-    const model = genAI.getGenerativeModel({
-      // This is a small, structured-analysis task. Flash-Lite avoids the long
-      // inference time of the previous 26B Gemma model.
-      model: "gemini-2.5-flash-lite",
-      generationConfig: {
-        responseMimeType: "application/json",
-        maxOutputTokens: 750,
+    const requests = [
+      {
+        // This is a small, structured-analysis task. Flash-Lite avoids the
+        // long inference time of the previous 26B Gemma model.
+        model: "gemini-2.5-flash-lite",
+        generationConfig: {
+          responseMimeType: "application/json",
+          maxOutputTokens: 1_024,
+        },
+        timeout: 20_000,
       },
-    })
-    const result = await model.generateContent(prompt)
-    const text = result.response.text()
+      {
+        // Keep the previously working free-tier model as a compatibility
+        // fallback when Flash-Lite is unavailable for a project or key.
+        model: "gemma-4-26b-a4b-it",
+        generationConfig: {
+          maxOutputTokens: 1_024,
+        },
+        timeout: 90_000,
+      },
+    ] as const
 
-    let jsonStr = text
-    const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/)
-    if (codeBlockMatch) {
-      jsonStr = codeBlockMatch[1].trim()
-    }
-    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/)
-    if (jsonMatch) {
-      jsonStr = jsonMatch[0]
+    let lastError: unknown
+    for (const request of requests) {
+      try {
+        const model = genAI.getGenerativeModel(
+          {
+            model: request.model,
+            generationConfig: request.generationConfig,
+          },
+          // Avoid leaving the page in a loading state when a model is not
+          // enabled for the account. The fallback then gets a chance to run.
+          { timeout: request.timeout },
+        )
+        const result = await model.generateContent(prompt)
+        return parseInsightResult(result.response.text())
+      } catch (error) {
+        lastError = error
+        console.warn(`AI insights model failed: ${request.model}`, error)
+      }
     }
 
-    return JSON.parse(jsonStr)
+    console.error("All AI insights models failed", lastError)
+    return {
+      insights: [
+        {
+          type: "anomaly",
+          title: "Could not generate insights",
+          description:
+            "AI analysis is temporarily unavailable. Please try again shortly.",
+          severity: "info",
+        },
+      ],
+    }
   },
 })
