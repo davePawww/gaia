@@ -15,11 +15,17 @@ function startOfMonth(timestamp: number): number {
   return new Date(d.getFullYear(), d.getMonth(), 1).getTime()
 }
 
+function startOfMonthOffset(timestamp: number, offset: number): number {
+  const d = new Date(timestamp)
+  return new Date(d.getFullYear(), d.getMonth() + offset, 1).getTime()
+}
+
 export const getSpendingByJar = query({
   args: { days: v.number() },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
     if (!userId) return []
+    if (args.days <= 0) throw new Error("Days must be positive")
 
     const cutoff = Date.now() - args.days * MS_PER_DAY
 
@@ -29,6 +35,12 @@ export const getSpendingByJar = query({
         q.eq("userId", userId).gte("createdAt", cutoff)
       )
       .collect()
+
+    const jars = await ctx.db
+      .query("jars")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect()
+    const jarsById = new Map(jars.map((jar) => [String(jar._id), jar]))
 
     const spendingMap: Record<string, number> = {}
 
@@ -40,10 +52,15 @@ export const getSpendingByJar = query({
       }
     }
 
-    const results: { jarId: string; jarName: string; color: string; total: number }[] = []
+    const results: {
+      jarId: string
+      jarName: string
+      color: string
+      total: number
+    }[] = []
 
     for (const [jarId, total] of Object.entries(spendingMap)) {
-      const jar = await ctx.db.get(jarId as Id<"jars">)
+      const jar = jarsById.get(jarId)
       if (jar) {
         results.push({ jarId, jarName: jar.name, color: jar.color, total })
       }
@@ -59,6 +76,7 @@ export const getSpendingByCategory = query({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
     if (!userId) return []
+    if (args.days <= 0) throw new Error("Days must be positive")
 
     const cutoff = Date.now() - args.days * MS_PER_DAY
 
@@ -69,9 +87,22 @@ export const getSpendingByCategory = query({
       )
       .collect()
 
+    const categories = await ctx.db
+      .query("categories")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect()
+    const categoriesById = new Map(
+      categories.map((category) => [category._id, category])
+    )
+
     const categoryMap: Record<
       string,
-      { categoryId: string; total: number }
+      {
+        categoryId: string
+        categoryName: string
+        jarName: string
+        total: number
+      }
     > = {}
 
     for (const tx of txs) {
@@ -79,14 +110,19 @@ export const getSpendingByCategory = query({
         (tx.type === "withdrawal" || tx.type === "transfer") &&
         tx.categoryId
       ) {
-        const category = await ctx.db.get(tx.categoryId)
+        const category = categoriesById.get(tx.categoryId)
         if (!category) continue
 
         if (args.jarName && category.jarName !== args.jarName) continue
 
         const key = tx.categoryId
         if (!categoryMap[key]) {
-          categoryMap[key] = { categoryId: tx.categoryId, total: 0 }
+          categoryMap[key] = {
+            categoryId: tx.categoryId,
+            categoryName: category.name,
+            jarName: category.jarName,
+            total: 0,
+          }
         }
         categoryMap[key].total += tx.amount
       }
@@ -100,15 +136,7 @@ export const getSpendingByCategory = query({
     }[] = []
 
     for (const entry of Object.values(categoryMap)) {
-      const category = await ctx.db.get(entry.categoryId as Id<"categories">)
-      if (category) {
-        results.push({
-          categoryId: entry.categoryId,
-          categoryName: category.name,
-          jarName: category.jarName,
-          total: entry.total,
-        })
-      }
+      results.push(entry)
     }
 
     results.sort((a, b) => b.total - a.total)
@@ -121,10 +149,11 @@ export const getMonthlyTrends = query({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
     if (!userId) return []
+    if (args.months <= 0) throw new Error("Months must be positive")
 
     const now = Date.now()
     const firstOfMonth = startOfMonth(now)
-    const cutoff = firstOfMonth - (args.months - 1) * 30 * MS_PER_DAY
+    const cutoff = startOfMonthOffset(firstOfMonth, -(args.months - 1))
 
     const txs = await ctx.db
       .query("transactions")
@@ -133,17 +162,25 @@ export const getMonthlyTrends = query({
       )
       .collect()
 
+    const jars = await ctx.db
+      .query("jars")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect()
+    const jarsById = new Map(jars.map((jar) => [String(jar._id), jar]))
+
     const jarTotals: Record<string, Record<string, number>> = {}
 
     for (const tx of txs) {
       if (tx.type === "withdrawal" && tx.fromJarId) {
         const mk = monthKey(tx.createdAt)
         if (!jarTotals[mk]) jarTotals[mk] = {}
-        jarTotals[mk][tx.fromJarId] = (jarTotals[mk][tx.fromJarId] ?? 0) + tx.amount
+        jarTotals[mk][tx.fromJarId] =
+          (jarTotals[mk][tx.fromJarId] ?? 0) + tx.amount
       } else if (tx.type === "transfer" && tx.fromJarId) {
         const mk = monthKey(tx.createdAt)
         if (!jarTotals[mk]) jarTotals[mk] = {}
-        jarTotals[mk][tx.fromJarId] = (jarTotals[mk][tx.fromJarId] ?? 0) + tx.amount
+        jarTotals[mk][tx.fromJarId] =
+          (jarTotals[mk][tx.fromJarId] ?? 0) + tx.amount
       }
     }
 
@@ -156,7 +193,7 @@ export const getMonthlyTrends = query({
 
     for (const [month, jars] of Object.entries(jarTotals)) {
       for (const [jarId, total] of Object.entries(jars)) {
-        const jar = await ctx.db.get(jarId as Id<"jars">)
+        const jar = jarsById.get(jarId)
         if (jar) {
           results.push({ month, jarName: jar.name, color: jar.color, total })
         }
@@ -173,10 +210,11 @@ export const getIncomeVsSpending = query({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
     if (!userId) return []
+    if (args.months <= 0) throw new Error("Months must be positive")
 
     const now = Date.now()
     const firstOfMonth = startOfMonth(now)
-    const cutoff = firstOfMonth - (args.months - 1) * 30 * MS_PER_DAY
+    const cutoff = startOfMonthOffset(firstOfMonth, -(args.months - 1))
 
     const txs = await ctx.db
       .query("transactions")
@@ -219,6 +257,7 @@ export const getSummaryStats = query({
         velocity: 0,
       }
     }
+    if (args.days <= 0) throw new Error("Days must be positive")
 
     const now = Date.now()
     const currentCutoff = now - args.days * MS_PER_DAY
@@ -264,7 +303,11 @@ export const getSummaryStats = query({
       const [topId, topTotal] = sortedCurrent[0]!
       const topJar = await ctx.db.get(topId as Id<"jars">)
       if (topJar) {
-        mostSpentJar = { name: topJar.name, color: topJar.color, total: topTotal }
+        mostSpentJar = {
+          name: topJar.name,
+          color: topJar.color,
+          total: topTotal,
+        }
       }
 
       const [bottomId, bottomTotal] = sortedCurrent[sortedCurrent.length - 1]!
@@ -282,9 +325,7 @@ export const getSummaryStats = query({
     const previousAvg = totalPrevious / args.days
 
     const velocity =
-      previousAvg > 0
-        ? ((currentAvg - previousAvg) / previousAvg) * 100
-        : 0
+      previousAvg > 0 ? ((currentAvg - previousAvg) / previousAvg) * 100 : 0
 
     return {
       totalSpending: totalCurrent,
@@ -309,7 +350,7 @@ export const getMonthComparison = query({
 
     const now = Date.now()
     const currentMonthStart = startOfMonth(now)
-    const previousMonthStart = startOfMonth(currentMonthStart - 1)
+    const previousMonthStart = startOfMonthOffset(currentMonthStart, -1)
     const previousMonthEnd = currentMonthStart - 1
 
     const txs = await ctx.db

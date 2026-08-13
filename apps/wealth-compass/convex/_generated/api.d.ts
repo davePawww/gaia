@@ -15,6 +15,7 @@ import type * as categories from "../categories.js";
 import type * as constants from "../constants.js";
 import type * as cronJobs from "../cronJobs.js";
 import type * as crons from "../crons.js";
+import type * as finance from "../finance.js";
 import type * as goals from "../goals.js";
 import type * as http from "../http.js";
 import type * as insights from "../insights.js";
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   constants: typeof constants;
   cronJobs: typeof cronJobs;
   crons: typeof crons;
+  finance: typeof finance;
   goals: typeof goals;
   http: typeof http;
   insights: typeof insights;

@@ -55,7 +55,7 @@ function AuthenticatedLayout() {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      navigate({ to: "/sign-in" })
+      navigate({ to: "/sign-in", replace: true })
     }
   }, [isLoading, isAuthenticated, navigate])
 
@@ -63,7 +63,7 @@ function AuthenticatedLayout() {
     ? convexUser.name.charAt(0).toUpperCase()
     : "U"
 
-  if (isLoading) {
+  if (isLoading || !isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -165,9 +165,5 @@ function AuthenticatedLayout() {
 }
 
 export const Route = createFileRoute("/_authenticated")({
-  beforeLoad: async () => {
-    // Auth check will be verified during Task 4 step 7
-    // For now, the ConvexAuthProvider handles auth state
-  },
   component: AuthenticatedLayout,
 })

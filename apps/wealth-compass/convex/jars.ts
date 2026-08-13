@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server"
 import { v } from "convex/values"
 import { getAuthUserId } from "@convex-dev/auth/server"
+import { calculateJarBalances } from "./finance"
 
 export const getUserJars = query({
   args: {},
@@ -32,25 +33,10 @@ export const getJarBalances = query({
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .collect()
 
-    const balances: Record<string, number> = {}
-    for (const jar of jars) {
-      balances[jar._id] = 0
-    }
-
-    for (const tx of transactions) {
-      if (tx.type === "income" && tx.toJarId && balances[tx.toJarId] !== undefined) {
-        balances[tx.toJarId] += tx.amount
-      } else if (tx.type === "withdrawal" && tx.fromJarId && balances[tx.fromJarId] !== undefined) {
-        balances[tx.fromJarId] -= tx.amount
-      } else if (tx.type === "transfer") {
-        if (tx.fromJarId && balances[tx.fromJarId] !== undefined) {
-          balances[tx.fromJarId] -= tx.amount
-        }
-        if (tx.toJarId && balances[tx.toJarId] !== undefined) {
-          balances[tx.toJarId] += tx.amount
-        }
-      }
-    }
+    const balances = calculateJarBalances(
+      jars.map((jar) => jar._id),
+      transactions
+    )
 
     return jars.map((jar) => ({
       jar,
@@ -102,7 +88,7 @@ export const updateJar = mutation({
       const categories = await ctx.db
         .query("categories")
         .withIndex("by_userId_jarName", (q) =>
-          q.eq("userId", userId).eq("jarName", jar.name),
+          q.eq("userId", userId).eq("jarName", jar.name)
         )
         .collect()
       for (const category of categories) {
@@ -129,7 +115,7 @@ export const updateAllJarPercentages = mutation({
 
     const totalPercentage = jars.reduce(
       (total, jar) => total + (args.percentages[jar.name] ?? jar.percentage),
-      0,
+      0
     )
     if (Math.abs(totalPercentage - 100) > 0.01) {
       throw new Error("Jar percentages must sum to 100")

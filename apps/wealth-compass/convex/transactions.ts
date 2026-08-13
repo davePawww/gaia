@@ -3,6 +3,7 @@ import { v } from "convex/values"
 import { getAuthUserId } from "@convex-dev/auth/server"
 import { JAR_FULL_NAMES } from "./constants"
 import { internal } from "./_generated/api"
+import { calculateJarBalances, sumBalances } from "./finance"
 import type { GenericMutationCtx } from "convex/server"
 import type { DataModel, Id } from "./_generated/dataModel"
 
@@ -27,16 +28,34 @@ export const allocateIncome = mutation({
     if (jars.length === 0) throw new Error("No jars found")
 
     if (args.overrides) {
-      if (Object.values(args.overrides).some((percentage) => percentage < 0)) {
-        throw new Error("Override percentages cannot be negative")
+      const jarNames = new Set(jars.map((jar) => jar.name))
+      const overrideNames = Object.keys(args.overrides)
+      if (
+        overrideNames.length !== jars.length ||
+        overrideNames.some((name) => !jarNames.has(name)) ||
+        jars.some((jar) => args.overrides?.[jar.name] === undefined)
+      ) {
+        throw new Error("Override percentages must include every jar")
       }
       const totalOverride = Object.values(args.overrides).reduce(
         (sum, pct) => sum + pct,
-        0,
+        0
       )
       if (Math.abs(totalOverride - 100) > 0.01) {
         throw new Error("Override percentages must sum to 100")
       }
+    }
+
+    const percentages = jars.map(
+      (jar) => args.overrides?.[jar.name] ?? jar.percentage
+    )
+    if (percentages.some((percentage) => percentage < 0)) {
+      throw new Error("Allocation percentages cannot be negative")
+    }
+    if (Math.abs(percentages.reduce((sum, pct) => sum + pct, 0) - 100) > 0.01) {
+      throw new Error(
+        "Jar percentages must sum to 100 before allocating income"
+      )
     }
 
     const now = Date.now()
@@ -83,21 +102,12 @@ export const withdraw = mutation({
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .collect()
 
-    let balance = 0
-    for (const tx of transactions) {
-      if (tx.type === "income" && tx.toJarId === args.jarId) {
-        balance += tx.amount
-      } else if (tx.type === "withdrawal" && tx.fromJarId === args.jarId) {
-        balance -= tx.amount
-      } else if (tx.type === "transfer") {
-        if (tx.fromJarId === args.jarId) balance -= tx.amount
-        if (tx.toJarId === args.jarId) balance += tx.amount
-      }
-    }
+    const balance =
+      calculateJarBalances([args.jarId], transactions)[args.jarId] ?? 0
 
     if (balance < args.amount) {
       throw new Error(
-        `Insufficient balance. Available: ${balance}, requested: ${args.amount}`,
+        `Insufficient balance. Available: ${balance}, requested: ${args.amount}`
       )
     }
 
@@ -121,7 +131,7 @@ export const withdraw = mutation({
         await ctx.scheduler.runAfter(
           0,
           internal.actions.sendPush.sendNotificationPush,
-          { notificationId },
+          { notificationId }
         )
       }
     }
@@ -170,21 +180,12 @@ export const transfer = mutation({
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .collect()
 
-    let balance = 0
-    for (const tx of transactions) {
-      if (tx.type === "income" && tx.toJarId === args.fromJarId) {
-        balance += tx.amount
-      } else if (tx.type === "withdrawal" && tx.fromJarId === args.fromJarId) {
-        balance -= tx.amount
-      } else if (tx.type === "transfer") {
-        if (tx.fromJarId === args.fromJarId) balance -= tx.amount
-        if (tx.toJarId === args.fromJarId) balance += tx.amount
-      }
-    }
+    const balance =
+      calculateJarBalances([args.fromJarId], transactions)[args.fromJarId] ?? 0
 
     if (balance < args.amount) {
       throw new Error(
-        `Insufficient balance in source jar. Available: ${balance}, requested: ${args.amount}`,
+        `Insufficient balance in source jar. Available: ${balance}, requested: ${args.amount}`
       )
     }
 
@@ -276,35 +277,21 @@ async function checkGoalCompletions(ctx: MutationCtx, userId: Id<"users">) {
 
   if (!prefs?.goalCompleted) return
 
+  const jars = await ctx.db
+    .query("jars")
+    .withIndex("by_userId", (q) => q.eq("userId", userId))
+    .collect()
+
   const transactions = await ctx.db
     .query("transactions")
     .withIndex("by_userId", (q) => q.eq("userId", userId))
     .collect()
 
-  const jarBalances: Record<string, number> = {}
-  for (const transaction of transactions) {
-    if (transaction.type === "income" && transaction.toJarId) {
-      jarBalances[transaction.toJarId] =
-        (jarBalances[transaction.toJarId] ?? 0) + transaction.amount
-    } else if (transaction.type === "withdrawal" && transaction.fromJarId) {
-      jarBalances[transaction.fromJarId] =
-        (jarBalances[transaction.fromJarId] ?? 0) - transaction.amount
-    } else if (transaction.type === "transfer") {
-      if (transaction.fromJarId) {
-        jarBalances[transaction.fromJarId] =
-          (jarBalances[transaction.fromJarId] ?? 0) - transaction.amount
-      }
-      if (transaction.toJarId) {
-        jarBalances[transaction.toJarId] =
-          (jarBalances[transaction.toJarId] ?? 0) + transaction.amount
-      }
-    }
-  }
-
-  const netWorth = Object.values(jarBalances).reduce(
-    (total, balance) => total + balance,
-    0,
+  const jarBalances = calculateJarBalances(
+    jars.map((jar) => jar._id),
+    transactions
   )
+  const netWorth = sumBalances(jarBalances)
 
   const existingNotifications = await ctx.db
     .query("notifications")
@@ -316,7 +303,7 @@ async function checkGoalCompletions(ctx: MutationCtx, userId: Id<"users">) {
       goal.type === "netWorth"
         ? netWorth
         : goal.jarId
-          ? jarBalances[goal.jarId] ?? 0
+          ? (jarBalances[goal.jarId] ?? 0)
           : 0
 
     if (currentValue >= goal.targetAmount) {
@@ -336,7 +323,7 @@ async function checkGoalCompletions(ctx: MutationCtx, userId: Id<"users">) {
         await ctx.scheduler.runAfter(
           0,
           internal.actions.sendPush.sendNotificationPush,
-          { notificationId },
+          { notificationId }
         )
       }
     }
@@ -347,7 +334,7 @@ async function validateCategory(
   ctx: MutationCtx,
   categoryId: Id<"categories"> | undefined,
   userId: Id<"users">,
-  jarName: string,
+  jarName: string
 ) {
   if (!categoryId) return
 
