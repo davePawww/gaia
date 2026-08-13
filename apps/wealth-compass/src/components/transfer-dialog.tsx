@@ -43,7 +43,10 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
   const categories = useQuery(
     api.categories.getCategoriesByJar,
     fromJarId && jarBalances
-      ? { jarName: jarBalances.find((jb) => jb.jar._id === fromJarId)?.jar.name ?? "" }
+      ? {
+          jarName:
+            jarBalances.find((jb) => jb.jar._id === fromJarId)?.jar.name ?? "",
+        }
       : "skip"
   )
   const transfer = useMutation(api.transactions.transfer)
@@ -51,6 +54,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
   const totalAmount = parseFloat(amount) || 0
   const fromJar = jarBalances?.find((jb) => jb.jar._id === fromJarId)
   const toJar = jarBalances?.find((jb) => jb.jar._id === toJarId)
+  const selectedCategory = categories?.find((cat) => cat._id === categoryId)
 
   const handleSubmit = async () => {
     if (!fromJarId || !toJarId) {
@@ -80,7 +84,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
         categoryId: categoryId ? (categoryId as Id<"categories">) : undefined,
       })
       toast.success(
-        `Transferred ${formatCurrency(totalAmount, currency)} from ${fromJar?.jar.name} to ${toJar?.jar.name}`,
+        `Transferred ${formatCurrency(totalAmount, currency)} from ${fromJar?.jar.name} to ${toJar?.jar.name}`
       )
       setOpen(false)
       setFromJarId("")
@@ -109,11 +113,20 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>From Jar</Label>
-            <Select value={fromJarId} onValueChange={(v) => setFromJarId(v ?? "")}>
+            <Select
+              value={fromJarId}
+              onValueChange={(v) => {
+                setFromJarId(v ?? "")
+                setCategoryId("")
+              }}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Source Jar">
                   {fromJarId && jarBalances
-                    ? (JAR_FULL_NAMES[jarBalances.find(jb => jb.jar._id === fromJarId)?.jar.name ?? ""] ?? "Select Source Jar")
+                    ? (JAR_FULL_NAMES[
+                        jarBalances.find((jb) => jb.jar._id === fromJarId)?.jar
+                          .name ?? ""
+                      ] ?? "Select Source Jar")
                     : "Select Source Jar"}
                 </SelectValue>
               </SelectTrigger>
@@ -146,7 +159,10 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Destination Jar">
                   {toJarId && jarBalances
-                    ? (JAR_FULL_NAMES[jarBalances.find(jb => jb.jar._id === toJarId)?.jar.name ?? ""] ?? "Select Destination Jar")
+                    ? (JAR_FULL_NAMES[
+                        jarBalances.find((jb) => jb.jar._id === toJarId)?.jar
+                          .name ?? ""
+                      ] ?? "Select Destination Jar")
                     : "Select Destination Jar"}
                 </SelectValue>
               </SelectTrigger>
@@ -160,7 +176,9 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
                           className="h-2 w-2 rounded-full"
                           style={{ backgroundColor: jb.jar.color }}
                         />
-                        <span>{JAR_FULL_NAMES[jb.jar.name] ?? jb.jar.name}</span>
+                        <span>
+                          {JAR_FULL_NAMES[jb.jar.name] ?? jb.jar.name}
+                        </span>
                         <span className="text-muted-foreground">
                           ({formatCurrency(jb.balance, currency)})
                         </span>
@@ -201,9 +219,14 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
           {categories && categories.length > 0 && (
             <div className="space-y-2">
               <Label>Category (optional)</Label>
-              <Select value={categoryId} onValueChange={(v) => setCategoryId(v ?? "")}>
+              <Select
+                value={categoryId}
+                onValueChange={(v) => setCategoryId(v ?? "")}
+              >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Choose a Category" />
+                  <SelectValue placeholder="Choose a Category">
+                    {selectedCategory?.name ?? "Choose a Category"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (

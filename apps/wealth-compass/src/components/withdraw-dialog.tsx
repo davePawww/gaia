@@ -41,13 +41,18 @@ export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
   const categories = useQuery(
     api.categories.getCategoriesByJar,
     selectedJarId && jarBalances
-      ? { jarName: jarBalances.find((jb) => jb.jar._id === selectedJarId)?.jar.name ?? "" }
+      ? {
+          jarName:
+            jarBalances.find((jb) => jb.jar._id === selectedJarId)?.jar.name ??
+            "",
+        }
       : "skip"
   )
   const withdraw = useMutation(api.transactions.withdraw)
 
   const totalAmount = parseFloat(amount) || 0
   const selectedJar = jarBalances?.find((jb) => jb.jar._id === selectedJarId)
+  const selectedCategory = categories?.find((cat) => cat._id === categoryId)
 
   const handleSubmit = async () => {
     if (!selectedJarId) {
@@ -72,7 +77,7 @@ export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
         categoryId: categoryId ? (categoryId as Id<"categories">) : undefined,
       })
       toast.success(
-        `Withdrew ${formatCurrency(totalAmount, currency)} from ${selectedJar?.jar.name}`,
+        `Withdrew ${formatCurrency(totalAmount, currency)} from ${selectedJar?.jar.name}`
       )
       setOpen(false)
       setSelectedJarId("")
@@ -100,11 +105,20 @@ export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Select Jar</Label>
-            <Select value={selectedJarId} onValueChange={(v) => setSelectedJarId(v ?? "")}>
+            <Select
+              value={selectedJarId}
+              onValueChange={(v) => {
+                setSelectedJarId(v ?? "")
+                setCategoryId("")
+              }}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Choose a Jar">
                   {selectedJarId && jarBalances
-                    ? (JAR_FULL_NAMES[jarBalances.find(jb => jb.jar._id === selectedJarId)?.jar.name ?? ""] ?? "Choose a Jar")
+                    ? (JAR_FULL_NAMES[
+                        jarBalances.find((jb) => jb.jar._id === selectedJarId)
+                          ?.jar.name ?? ""
+                      ] ?? "Choose a Jar")
                     : "Choose a Jar"}
                 </SelectValue>
               </SelectTrigger>
@@ -155,9 +169,14 @@ export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
           {categories && categories.length > 0 && (
             <div className="space-y-2">
               <Label>Category (optional)</Label>
-              <Select value={categoryId} onValueChange={(v) => setCategoryId(v ?? "")}>
+              <Select
+                value={categoryId}
+                onValueChange={(v) => setCategoryId(v ?? "")}
+              >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Choose a Category" />
+                  <SelectValue placeholder="Choose a Category">
+                    {selectedCategory?.name ?? "Choose a Category"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (
