@@ -2,6 +2,7 @@ import { mutation, query } from "./_generated/server"
 import { v } from "convex/values"
 import { getAuthUserId } from "@convex-dev/auth/server"
 import { JAR_FULL_NAMES } from "./constants"
+import { internal } from "./_generated/api"
 
 export const allocateIncome = mutation({
   args: {
@@ -22,6 +23,9 @@ export const allocateIncome = mutation({
     if (jars.length === 0) throw new Error("No jars found")
 
     if (args.overrides) {
+      if (Object.values(args.overrides).some((percentage) => percentage < 0)) {
+        throw new Error("Override percentages cannot be negative")
+      }
       const totalOverride = Object.values(args.overrides).reduce(
         (sum, pct) => sum + pct,
         0,
@@ -68,6 +72,8 @@ export const withdraw = mutation({
     const jar = await ctx.db.get(args.jarId)
     if (!jar || jar.userId !== userId) throw new Error("Jar not found")
 
+    await validateCategory(ctx, args.categoryId, userId, jar.name)
+
     const transactions = await ctx.db
       .query("transactions")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
@@ -100,7 +106,7 @@ export const withdraw = mutation({
       const remainingBalance = balance - args.amount
       if (remainingBalance < prefs.spendingLimitThreshold) {
         const jarName = JAR_FULL_NAMES[jar.name] ?? jar.name
-        await ctx.db.insert("notifications", {
+        const notificationId = await ctx.db.insert("notifications", {
           userId,
           type: "spending_limit_warning",
           title: "Spending Limit Warning",
@@ -108,6 +114,11 @@ export const withdraw = mutation({
           read: false,
           createdAt: Date.now(),
         })
+        await ctx.scheduler.runAfter(
+          0,
+          internal.actions.sendPush.sendNotificationPush,
+          { notificationId },
+        )
       }
     }
 
@@ -147,6 +158,8 @@ export const transfer = mutation({
       throw new Error("Source jar not found")
     if (!toJar || toJar.userId !== userId)
       throw new Error("Destination jar not found")
+
+    await validateCategory(ctx, args.categoryId, userId, fromJar.name)
 
     const transactions = await ctx.db
       .query("transactions")
@@ -259,39 +272,83 @@ async function checkGoalCompletions(ctx: any, userId: string) {
 
   if (!prefs?.goalCompleted) return
 
-  for (const goal of goals) {
-    let currentValue = 0
-    if (goal.type === "jar" && goal.jarId) {
-      const transactions = await ctx.db
-        .query("transactions")
-        .withIndex("by_userId", (q: any) => q.eq("userId", userId))
-        .collect()
-      for (const t of transactions) {
-        if (t.type === "income" && t.toJarId === goal.jarId) currentValue += t.amount
-        if (t.type === "withdrawal" && t.fromJarId === goal.jarId) currentValue -= t.amount
-        if (t.type === "transfer" && t.toJarId === goal.jarId) currentValue += t.amount
-        if (t.type === "transfer" && t.fromJarId === goal.jarId) currentValue -= t.amount
+  const transactions = await ctx.db
+    .query("transactions")
+    .withIndex("by_userId", (q: any) => q.eq("userId", userId))
+    .collect()
+
+  const jarBalances: Record<string, number> = {}
+  for (const transaction of transactions) {
+    if (transaction.type === "income" && transaction.toJarId) {
+      jarBalances[transaction.toJarId] =
+        (jarBalances[transaction.toJarId] ?? 0) + transaction.amount
+    } else if (transaction.type === "withdrawal" && transaction.fromJarId) {
+      jarBalances[transaction.fromJarId] =
+        (jarBalances[transaction.fromJarId] ?? 0) - transaction.amount
+    } else if (transaction.type === "transfer") {
+      if (transaction.fromJarId) {
+        jarBalances[transaction.fromJarId] =
+          (jarBalances[transaction.fromJarId] ?? 0) - transaction.amount
+      }
+      if (transaction.toJarId) {
+        jarBalances[transaction.toJarId] =
+          (jarBalances[transaction.toJarId] ?? 0) + transaction.amount
       }
     }
+  }
+
+  const netWorth = Object.values(jarBalances).reduce(
+    (total, balance) => total + balance,
+    0,
+  )
+
+  const existingNotifications = await ctx.db
+    .query("notifications")
+    .withIndex("by_userId", (q: any) => q.eq("userId", userId))
+    .collect()
+
+  for (const goal of goals) {
+    const currentValue =
+      goal.type === "netWorth"
+        ? netWorth
+        : goal.jarId
+          ? jarBalances[goal.jarId] ?? 0
+          : 0
 
     if (currentValue >= goal.targetAmount) {
-      const existing = await ctx.db
-        .query("notifications")
-        .withIndex("by_userId", (q: any) => q.eq("userId", userId))
-        .collect()
-      const alreadyNotified = existing.some(
-        (n: any) => n.type === "goal_completed" && n.body.includes(goal.name)
+      const alreadyNotified = existingNotifications.some(
+        (n: any) => n.type === "goal_completed" && n.goalId === goal._id
       )
       if (!alreadyNotified) {
-        await ctx.db.insert("notifications", {
+        const notificationId = await ctx.db.insert("notifications", {
           userId,
           type: "goal_completed",
           title: "Goal Completed!",
           body: `You've reached your goal "${goal.name}"!`,
+          goalId: goal._id,
           read: false,
           createdAt: Date.now(),
         })
+        await ctx.scheduler.runAfter(
+          0,
+          internal.actions.sendPush.sendNotificationPush,
+          { notificationId },
+        )
       }
     }
+  }
+}
+
+async function validateCategory(
+  ctx: any,
+  categoryId: string | undefined,
+  userId: string,
+  jarName: string,
+) {
+  if (!categoryId) return
+
+  const category = await ctx.db.get(categoryId)
+  if (!category || category.userId !== userId || category.jarName !== jarName) {
+    throw new Error("Category not found")
   }
 }

@@ -67,6 +67,7 @@ export default defineSchema({
     targetAmount: v.number(),
     jarId: v.optional(v.id("jars")),
     deadline: v.optional(v.number()),
+    deadlineReminderId: v.optional(v.id("_scheduled_functions")),
   }).index("by_userId", ["userId"]),
 
   pushSubscriptions: defineTable({
@@ -102,6 +103,7 @@ export default defineSchema({
     ),
     title: v.string(),
     body: v.string(),
+    goalId: v.optional(v.id("goals")),
     read: v.boolean(),
     createdAt: v.number(),
   })

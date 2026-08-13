@@ -42,6 +42,13 @@ export const addCategory = mutation({
 
     if (!args.name.trim()) throw new Error("Category name is required")
 
+    const jar = await ctx.db
+      .query("jars")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .filter((q) => q.eq(q.field("name"), args.jarName))
+      .first()
+    if (!jar) throw new Error("Jar not found")
+
     const existing = await ctx.db
       .query("categories")
       .withIndex("by_userId_jarName", (q) =>
@@ -106,6 +113,15 @@ export const resetToDefaults = mutation({
     if (!userId) throw new Error("Not authenticated")
 
     const jarsToDelete = args.jarName ? [args.jarName] : Object.keys(DEFAULT_CATEGORIES)
+
+    if (args.jarName) {
+      const jar = await ctx.db
+        .query("jars")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .filter((q) => q.eq(q.field("name"), args.jarName))
+        .first()
+      if (!jar) throw new Error("Jar not found")
+    }
 
     for (const jarName of jarsToDelete) {
       const existing = await ctx.db

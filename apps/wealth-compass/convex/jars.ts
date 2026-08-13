@@ -75,11 +75,41 @@ export const updateJar = mutation({
     const jar = await ctx.db.get(jarId)
     if (!jar || jar.userId !== userId) throw new Error("Jar not found")
 
+    const nextName = updates.name?.trim()
+    if (updates.name !== undefined && !nextName) {
+      throw new Error("Jar name is required")
+    }
+
+    if (nextName && nextName !== jar.name) {
+      const duplicate = await ctx.db
+        .query("jars")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .filter((q) => q.eq(q.field("name"), nextName))
+        .first()
+      if (duplicate) throw new Error("Jar name already exists")
+    }
+
     if (updates.percentage !== undefined && updates.percentage < 0) {
       throw new Error("Jar percentage cannot be negative")
     }
 
-    await ctx.db.patch(jarId, updates)
+    await ctx.db.patch(jarId, {
+      ...updates,
+      ...(nextName ? { name: nextName } : {}),
+    })
+
+    if (nextName && nextName !== jar.name) {
+      const categories = await ctx.db
+        .query("categories")
+        .withIndex("by_userId_jarName", (q) =>
+          q.eq("userId", userId).eq("jarName", jar.name),
+        )
+        .collect()
+      for (const category of categories) {
+        await ctx.db.patch(category._id, { jarName: nextName })
+      }
+    }
+
     return { success: true }
   },
 })

@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { internalQuery, internalMutation } from "./_generated/server";
 
 export const getPreferences = query({
   args: {},
@@ -14,6 +15,34 @@ export const getPreferences = query({
     return prefs ?? null;
   },
 });
+
+export const getPushContext = internalQuery({
+  args: { notificationId: v.id("notifications") },
+  handler: async (ctx, args) => {
+    const notification = await ctx.db.get(args.notificationId)
+    if (!notification) return null
+
+    const subscriptions = await ctx.db
+      .query("pushSubscriptions")
+      .withIndex("by_userId", (q) => q.eq("userId", notification.userId))
+      .collect()
+
+    return { notification, subscriptions }
+  },
+})
+
+export const removeSubscriptionIfOwned = internalMutation({
+  args: {
+    subscriptionId: v.id("pushSubscriptions"),
+    endpoint: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const subscription = await ctx.db.get(args.subscriptionId)
+    if (subscription?.endpoint === args.endpoint) {
+      await ctx.db.delete(args.subscriptionId)
+    }
+  },
+})
 
 export const upsertPreferences = mutation({
   args: {

@@ -1,6 +1,7 @@
 import { internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { JAR_FULL_NAMES } from "./constants";
+import { internal } from "./_generated/api";
 
 export const checkIncomeAllocationReminder = internalMutation({
   args: {},
@@ -42,7 +43,7 @@ export const checkIncomeAllocationReminder = internalMutation({
         );
 
         if (!alreadyReminded) {
-          await ctx.db.insert("notifications", {
+          const notificationId = await ctx.db.insert("notifications", {
             userId: prefs.userId,
             type: "income_allocation_reminder",
             title: "Income Allocation Reminder",
@@ -50,6 +51,11 @@ export const checkIncomeAllocationReminder = internalMutation({
             read: false,
             createdAt: now,
           });
+          await ctx.scheduler.runAfter(
+            0,
+            internal.actions.sendPush.sendNotificationPush,
+            { notificationId },
+          );
         }
       }
     }
@@ -100,7 +106,7 @@ export const sendMonthlySpendingSummary = internalMutation({
 
       const monthName = lastMonth.toLocaleString("en-US", { month: "long" });
 
-      await ctx.db.insert("notifications", {
+      const notificationId = await ctx.db.insert("notifications", {
         userId: prefs.userId,
         type: "monthly_spending_summary",
         title: `${monthName} Spending Summary`,
@@ -110,6 +116,11 @@ export const sendMonthlySpendingSummary = internalMutation({
         read: false,
         createdAt: now,
       });
+      await ctx.scheduler.runAfter(
+        0,
+        internal.actions.sendPush.sendNotificationPush,
+        { notificationId },
+      );
     }
   },
 });
@@ -117,11 +128,19 @@ export const sendMonthlySpendingSummary = internalMutation({
 export const sendGoalDeadlineReminder = internalMutation({
   args: {
     userId: v.id("users"),
-    goalId: v.string(),
-    goalName: v.string(),
+    goalId: v.id("goals"),
     deadline: v.number(),
   },
   handler: async (ctx, args) => {
+    const goal = await ctx.db.get(args.goalId)
+    if (
+      !goal ||
+      goal.userId !== args.userId ||
+      goal.deadline !== args.deadline
+    ) {
+      return
+    }
+
     const prefs = await ctx.db
       .query("notificationPreferences")
       .withIndex("by_userId", (q) => q.eq("userId", args.userId))
@@ -135,13 +154,19 @@ export const sendGoalDeadlineReminder = internalMutation({
       year: "numeric",
     });
 
-    await ctx.db.insert("notifications", {
+    const notificationId = await ctx.db.insert("notifications", {
       userId: args.userId,
       type: "goal_deadline_approaching",
       title: "Goal Deadline Approaching",
-      body: `"${args.goalName}" is due on ${deadlineDate}.`,
+      body: `"${goal.name}" is due on ${deadlineDate}.`,
+      goalId: args.goalId,
       read: false,
       createdAt: Date.now(),
     });
+    await ctx.scheduler.runAfter(
+      0,
+      internal.actions.sendPush.sendNotificationPush,
+      { notificationId },
+    );
   },
 });
