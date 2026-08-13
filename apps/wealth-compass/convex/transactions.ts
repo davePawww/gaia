@@ -3,6 +3,10 @@ import { v } from "convex/values"
 import { getAuthUserId } from "@convex-dev/auth/server"
 import { JAR_FULL_NAMES } from "./constants"
 import { internal } from "./_generated/api"
+import type { GenericMutationCtx } from "convex/server"
+import type { DataModel, Id } from "./_generated/dataModel"
+
+type MutationCtx = GenericMutationCtx<DataModel>
 
 export const allocateIncome = mutation({
   args: {
@@ -259,22 +263,22 @@ export const deleteTransaction = mutation({
   },
 })
 
-async function checkGoalCompletions(ctx: any, userId: string) {
+async function checkGoalCompletions(ctx: MutationCtx, userId: Id<"users">) {
   const goals = await ctx.db
     .query("goals")
-    .withIndex("by_userId", (q: any) => q.eq("userId", userId))
+    .withIndex("by_userId", (q) => q.eq("userId", userId))
     .collect()
 
   const prefs = await ctx.db
     .query("notificationPreferences")
-    .withIndex("by_userId", (q: any) => q.eq("userId", userId))
+    .withIndex("by_userId", (q) => q.eq("userId", userId))
     .unique()
 
   if (!prefs?.goalCompleted) return
 
   const transactions = await ctx.db
     .query("transactions")
-    .withIndex("by_userId", (q: any) => q.eq("userId", userId))
+    .withIndex("by_userId", (q) => q.eq("userId", userId))
     .collect()
 
   const jarBalances: Record<string, number> = {}
@@ -304,7 +308,7 @@ async function checkGoalCompletions(ctx: any, userId: string) {
 
   const existingNotifications = await ctx.db
     .query("notifications")
-    .withIndex("by_userId", (q: any) => q.eq("userId", userId))
+    .withIndex("by_userId", (q) => q.eq("userId", userId))
     .collect()
 
   for (const goal of goals) {
@@ -317,7 +321,7 @@ async function checkGoalCompletions(ctx: any, userId: string) {
 
     if (currentValue >= goal.targetAmount) {
       const alreadyNotified = existingNotifications.some(
-        (n: any) => n.type === "goal_completed" && n.goalId === goal._id
+        (n) => n.type === "goal_completed" && n.goalId === goal._id
       )
       if (!alreadyNotified) {
         const notificationId = await ctx.db.insert("notifications", {
@@ -340,9 +344,9 @@ async function checkGoalCompletions(ctx: any, userId: string) {
 }
 
 async function validateCategory(
-  ctx: any,
-  categoryId: string | undefined,
-  userId: string,
+  ctx: MutationCtx,
+  categoryId: Id<"categories"> | undefined,
+  userId: Id<"users">,
   jarName: string,
 ) {
   if (!categoryId) return

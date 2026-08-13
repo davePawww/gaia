@@ -7,14 +7,15 @@ import { Progress } from "@gaia/ui/components/progress"
 import { Trash2, Target, Wallet } from "lucide-react"
 import { toast } from "sonner"
 import { formatCurrency, type CurrencyCode } from "@wealth-compass/lib/currency"
+import type { Id } from "../../convex/_generated/dataModel"
 
 interface GoalCardProps {
   goal: {
-    _id: string
+    _id: Id<"goals">
     name: string
     type: "jar" | "netWorth"
     targetAmount: number
-    jarId?: string
+    jarId?: Id<"jars">
     deadline?: number
   }
   currency: CurrencyCode
@@ -50,7 +51,7 @@ export function GoalCard({ goal, currency }: GoalCardProps) {
 
   const handleDelete = async () => {
     try {
-      await deleteGoal({ goalId: goal._id as any })
+      await deleteGoal({ goalId: goal._id })
       toast.success("Goal deleted")
     } catch {
       toast.error("Failed to delete goal")

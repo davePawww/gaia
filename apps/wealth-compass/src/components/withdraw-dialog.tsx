@@ -23,6 +23,7 @@ import {
 } from "@gaia/ui/components/select"
 import { toast } from "sonner"
 import { formatCurrency, type CurrencyCode } from "@wealth-compass/lib/currency"
+import type { Id } from "../../convex/_generated/dataModel"
 
 interface WithdrawDialogProps {
   currency: CurrencyCode
@@ -65,10 +66,10 @@ export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
     setLoading(true)
     try {
       await withdraw({
-        jarId: selectedJarId as any,
+        jarId: selectedJarId as Id<"jars">,
         amount: totalAmount,
         note: note.trim() || undefined,
-        categoryId: categoryId ? (categoryId as any) : undefined,
+        categoryId: categoryId ? (categoryId as Id<"categories">) : undefined,
       })
       toast.success(
         `Withdrew ${formatCurrency(totalAmount, currency)} from ${selectedJar?.jar.name}`,

@@ -4,6 +4,25 @@ import { GoogleGenerativeAI } from "@google/generative-ai"
 
 declare const process: { env: { GEMINI_API_KEY?: string } }
 
+type SpendingByJar = { jarName: string; total: number }
+type SpendingByCategory = { categoryName: string; jarName: string; total: number }
+type MonthlyTrend = { month: string; jarName: string; total: number }
+type IncomeVsSpending = { month: string; income: number; spending: number }
+type SummaryStats = { totalSpending: number; avgDaily: number; velocity?: number }
+type MonthComparison = {
+  current?: { income: number; spending: number }
+  previous?: { income: number; spending: number }
+}
+type InsightInput = {
+  spendingByJar?: SpendingByJar[]
+  spendingByCategory?: SpendingByCategory[]
+  monthlyTrends?: MonthlyTrend[]
+  incomeVsSpending?: IncomeVsSpending[]
+  summaryStats?: SummaryStats
+  monthComparison?: MonthComparison
+  currency: string
+}
+
 export const generateInsights = action({
   args: {
     spendingByJar: v.any(),
@@ -15,7 +34,7 @@ export const generateInsights = action({
     currency: v.string(),
   },
   handler: async (_ctx, args) => {
-    const body = args
+    const body = args as unknown as InsightInput
     const sym = body.currency
 
     if (!process.env.GEMINI_API_KEY) {
@@ -34,12 +53,12 @@ export const generateInsights = action({
 
     const fmt = (n: number) => `${sym}${n.toFixed(2)}`
     const summary = {
-      spendingByJar: body.spendingByJar?.map((j: any) => `${j.jarName}: ${fmt(j.total)}`).join(", ") || "none",
-      spendingByCategory: body.spendingByCategory?.slice(0, 10).map((c: any) => `${c.categoryName} (${c.jarName}): ${fmt(c.total)}`).join(", ") || "none",
-      monthlyTrends: body.monthlyTrends?.map((t: any) => `${t.month} ${t.jarName}: ${fmt(t.total)}`).join(", ") || "none",
-      incomeVsSpending: body.incomeVsSpending?.map((m: any) => `${m.month}: income ${fmt(m.income)}, spending ${fmt(m.spending)}`).join(", ") || "none",
+      spendingByJar: body.spendingByJar?.map((j) => `${j.jarName}: ${fmt(j.total)}`).join(", ") || "none",
+      spendingByCategory: body.spendingByCategory?.slice(0, 10).map((c) => `${c.categoryName} (${c.jarName}): ${fmt(c.total)}`).join(", ") || "none",
+      monthlyTrends: body.monthlyTrends?.map((t) => `${t.month} ${t.jarName}: ${fmt(t.total)}`).join(", ") || "none",
+      incomeVsSpending: body.incomeVsSpending?.map((m) => `${m.month}: income ${fmt(m.income)}, spending ${fmt(m.spending)}`).join(", ") || "none",
       summaryStats: body.summaryStats ? `Total: ${fmt(body.summaryStats.totalSpending)}, Avg daily: ${fmt(body.summaryStats.avgDaily)}, Velocity: ${body.summaryStats.velocity?.toFixed(1)}%` : "none",
-      monthComparison: body.monthComparison ? `Current: income ${fmt(body.monthComparison.current?.income)}, spending ${fmt(body.monthComparison.current?.spending)}. Previous: income ${fmt(body.monthComparison.previous?.income)}, spending ${fmt(body.monthComparison.previous?.spending)}` : "none",
+      monthComparison: body.monthComparison ? `Current: income ${fmt(body.monthComparison.current?.income ?? 0)}, spending ${fmt(body.monthComparison.current?.spending ?? 0)}. Previous: income ${fmt(body.monthComparison.previous?.income ?? 0)}, spending ${fmt(body.monthComparison.previous?.spending ?? 0)}` : "none",
     }
 
     const prompt = `Analyze this financial data and provide 3-5 actionable insights.

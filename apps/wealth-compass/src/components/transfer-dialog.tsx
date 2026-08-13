@@ -24,6 +24,7 @@ import {
 import { toast } from "sonner"
 import { ArrowRightLeft } from "lucide-react"
 import { formatCurrency, type CurrencyCode } from "@wealth-compass/lib/currency"
+import type { Id } from "../../convex/_generated/dataModel"
 
 interface TransferDialogProps {
   currency: CurrencyCode
@@ -72,11 +73,11 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
     setLoading(true)
     try {
       await transfer({
-        fromJarId: fromJarId as any,
-        toJarId: toJarId as any,
+        fromJarId: fromJarId as Id<"jars">,
+        toJarId: toJarId as Id<"jars">,
         amount: totalAmount,
         note: note.trim() || undefined,
-        categoryId: categoryId ? (categoryId as any) : undefined,
+        categoryId: categoryId ? (categoryId as Id<"categories">) : undefined,
       })
       toast.success(
         `Transferred ${formatCurrency(totalAmount, currency)} from ${fromJar?.jar.name} to ${toJar?.jar.name}`,

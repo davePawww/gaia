@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner"
 import { JAR_FULL_NAMES } from "../../convex/constants"
 import type { CurrencyCode } from "@wealth-compass/lib/currency"
+import type { Id } from "../../convex/_generated/dataModel"
 
 const GOAL_TYPE_LABELS: Record<string, string> = {
   netWorth: "Net Worth Target",
@@ -65,7 +66,7 @@ export function CreateGoalDialog({ currency: _currency, children }: CreateGoalDi
         name: name.trim(),
         type,
         targetAmount: parseFloat(targetAmount),
-        jarId: type === "jar" ? (jarId as any) : undefined,
+        jarId: type === "jar" ? (jarId as Id<"jars">) : undefined,
         deadline: deadline ? new Date(deadline).getTime() : undefined,
       })
       toast.success("Goal created!")

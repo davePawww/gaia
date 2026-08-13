@@ -8,6 +8,7 @@ import {
 } from "@gaia/ui/components/popover";
 import { Bell } from "lucide-react";
 import { useState } from "react";
+import type { Id } from "../../convex/_generated/dataModel";
 
 const TYPE_LABELS: Record<string, string> = {
   income_allocation_reminder: "Income Allocation Reminder",
@@ -39,8 +40,8 @@ export function NotificationBell() {
     await markAllAsRead();
   };
 
-  const handleNotificationClick = async (id: string) => {
-    await markAsRead({ notificationId: id as any });
+  const handleNotificationClick = async (id: Id<"notifications">) => {
+    await markAsRead({ notificationId: id });
   };
 
   return (

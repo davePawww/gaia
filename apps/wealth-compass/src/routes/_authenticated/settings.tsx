@@ -21,6 +21,7 @@ import { PERSONALITY_PRESETS, DEFAULT_JARS, JAR_FULL_NAMES } from "../../../conv
 import { useState, useEffect } from "react"
 import { Trash2, Plus } from "lucide-react"
 import { NotificationSettings } from "../../components/notification-settings"
+import type { Id } from "../../../convex/_generated/dataModel"
 
 function SettingsPage() {
   const { theme, setTheme } = useTheme()
@@ -195,8 +196,14 @@ function JarSettings({
   jar,
   onUpdate,
 }: {
-  jar: { _id: string; name: string; color: string; percentage: number }
-  onUpdate: any
+  jar: { _id: Id<"jars">; name: string; color: string; percentage: number }
+  onUpdate: (args: {
+    jarId: Id<"jars">
+    name?: string
+    color?: string
+    percentage?: number
+    icon?: string
+  }) => Promise<unknown>
 }) {
   const [name, setName] = useState(jar.name)
   const [color, setColor] = useState(jar.color)
@@ -292,7 +299,7 @@ function CategorySettings({
   const handleRename = async (categoryId: string) => {
     if (!editingName.trim()) return
     try {
-      await renameCategory({ categoryId: categoryId as any, name: editingName.trim() })
+      await renameCategory({ categoryId: categoryId as Id<"categories">, name: editingName.trim() })
       setEditingId(null)
       toast.success("Category renamed")
     } catch (error) {
@@ -302,7 +309,7 @@ function CategorySettings({
 
   const handleDelete = async (categoryId: string) => {
     try {
-      await deleteCategory({ categoryId: categoryId as any })
+      await deleteCategory({ categoryId: categoryId as Id<"categories"> })
       toast.success("Category deleted")
     } catch {
       toast.error("Failed to delete category")

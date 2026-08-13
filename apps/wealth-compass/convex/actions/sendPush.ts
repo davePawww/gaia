@@ -40,9 +40,13 @@ export const sendPush = internalAction({
         })
       );
       return { success: true, expired: false };
-    } catch (error: any) {
+    } catch (error: unknown) {
       // 404 = subscription expired, 410 = gone
-      if (error.statusCode === 404 || error.statusCode === 410) {
+      const statusCode =
+        typeof error === "object" && error !== null && "statusCode" in error
+          ? error.statusCode
+          : undefined
+      if (statusCode === 404 || statusCode === 410) {
         return { success: false, expired: true };
       }
       throw error;

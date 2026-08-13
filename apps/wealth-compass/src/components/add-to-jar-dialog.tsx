@@ -23,6 +23,7 @@ import {
 } from "@gaia/ui/components/select"
 import { toast } from "sonner"
 import { formatCurrency, type CurrencyCode } from "@wealth-compass/lib/currency"
+import type { Id } from "../../convex/_generated/dataModel"
 
 interface AddToJarDialogProps {
   currency: CurrencyCode
@@ -54,7 +55,7 @@ export function AddToJarDialog({ currency, children }: AddToJarDialogProps) {
     setLoading(true)
     try {
       await addToJar({
-        jarId: selectedJarId as any,
+        jarId: selectedJarId as Id<"jars">,
         amount: totalAmount,
         note: note.trim() || undefined,
       })
