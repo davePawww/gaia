@@ -90,6 +90,18 @@ export default defineSchema({
     monthlySpendingSummary: v.boolean(),
     spendingLimitThreshold: v.number(),
     goalDeadlineDays: v.number(),
+    incomeAllocationFrequency: v.optional(
+      v.union(
+        v.literal("daily"),
+        v.literal("weekly"),
+        v.literal("custom")
+      )
+    ),
+    incomeAllocationCustomDay: v.optional(v.number()),
+    quietHoursEnabled: v.optional(v.boolean()),
+    quietHoursStart: v.optional(v.string()),
+    quietHoursEnd: v.optional(v.string()),
+    quietHoursTimezone: v.optional(v.string()),
   }).index("by_userId", ["userId"]),
 
   notifications: defineTable({
@@ -99,7 +111,8 @@ export default defineSchema({
       v.literal("goal_deadline_approaching"),
       v.literal("goal_completed"),
       v.literal("spending_limit_warning"),
-      v.literal("monthly_spending_summary")
+      v.literal("monthly_spending_summary"),
+      v.literal("test")
     ),
     title: v.string(),
     body: v.string(),

@@ -13,6 +13,48 @@ const subscriptionValidator = v.object({
   }),
 })
 
+function parseTime(value: string): number | null {
+  const match = /^(\d{2}):(\d{2})$/.exec(value)
+  if (!match) return null
+
+  const hours = Number(match[1])
+  const minutes = Number(match[2])
+  if (hours > 23 || minutes > 59) return null
+  return hours * 60 + minutes
+}
+
+function isWithinQuietHours(
+  quietHours: {
+    start: string
+    end: string
+    timezone: string
+  } | null,
+): boolean {
+  if (!quietHours) return false
+
+  const start = parseTime(quietHours.start)
+  const end = parseTime(quietHours.end)
+  if (start === null || end === null || start === end) return false
+
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: quietHours.timezone,
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    }).formatToParts(new Date())
+    const hour = Number(parts.find((part) => part.type === "hour")?.value)
+    const minute = Number(parts.find((part) => part.type === "minute")?.value)
+    const current = hour * 60 + minute
+
+    return start < end
+      ? current >= start && current < end
+      : current >= start || current < end
+  } catch {
+    return false
+  }
+}
+
 export const sendPush = internalAction({
   args: {
     subscription: subscriptionValidator,
@@ -62,6 +104,7 @@ export const sendNotificationPush = internalAction({
       { notificationId: args.notificationId },
     )
     if (!pushContext) return
+    if (isWithinQuietHours(pushContext.quietHours)) return
 
     for (const subscription of pushContext.subscriptions) {
       const result = await ctx.runAction(internal.actions.sendPush.sendPush, {

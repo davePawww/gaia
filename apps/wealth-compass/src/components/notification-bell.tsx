@@ -16,6 +16,7 @@ const TYPE_LABELS: Record<string, string> = {
   goal_completed: "Goal Completed",
   spending_limit_warning: "Spending Limit Warning",
   monthly_spending_summary: "Monthly Spending Summary",
+  test: "Test Notification",
 };
 
 function timeAgo(timestamp: number): string {

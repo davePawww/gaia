@@ -11,8 +11,21 @@ export const checkIncomeAllocationReminder = internalMutation({
     const enabledPrefs = allPrefs.filter((p) => p.incomeAllocationReminder);
 
     for (const prefs of enabledPrefs) {
-      // Check if user has any income this month
       const now = Date.now();
+      const today = new Date(now);
+      const frequency = prefs.incomeAllocationFrequency ?? "daily";
+      const customDay = Math.min(
+        Math.max(prefs.incomeAllocationCustomDay ?? 1, 1),
+        28,
+      );
+      const shouldRun =
+        frequency === "daily" ||
+        (frequency === "weekly" && today.getUTCDay() === 1) ||
+        (frequency === "custom" && today.getUTCDate() === customDay);
+
+      if (!shouldRun) continue;
+
+      // Check if user has any income this month
       const monthStart = new Date(now);
       monthStart.setDate(1);
       monthStart.setHours(0, 0, 0, 0);

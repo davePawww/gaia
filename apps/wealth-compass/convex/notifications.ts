@@ -1,7 +1,12 @@
-import { query, mutation } from "./_generated/server";
+import {
+  query,
+  mutation,
+  internalQuery,
+  internalMutation,
+} from "./_generated/server";
+import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { internalQuery, internalMutation } from "./_generated/server";
 
 export const getPreferences = query({
   args: {},
@@ -12,7 +17,17 @@ export const getPreferences = query({
       .query("notificationPreferences")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .unique();
-    return prefs ?? null;
+    if (!prefs) return null;
+
+    return {
+      ...prefs,
+      incomeAllocationFrequency: prefs.incomeAllocationFrequency ?? "daily",
+      incomeAllocationCustomDay: prefs.incomeAllocationCustomDay ?? 1,
+      quietHoursEnabled: prefs.quietHoursEnabled ?? false,
+      quietHoursStart: prefs.quietHoursStart ?? "22:00",
+      quietHoursEnd: prefs.quietHoursEnd ?? "07:00",
+      quietHoursTimezone: prefs.quietHoursTimezone ?? "UTC",
+    };
   },
 });
 
@@ -27,7 +42,22 @@ export const getPushContext = internalQuery({
       .withIndex("by_userId", (q) => q.eq("userId", notification.userId))
       .collect()
 
-    return { notification, subscriptions }
+    const prefs = await ctx.db
+      .query("notificationPreferences")
+      .withIndex("by_userId", (q) => q.eq("userId", notification.userId))
+      .unique()
+
+    return {
+      notification,
+      subscriptions,
+      quietHours: prefs?.quietHoursEnabled
+        ? {
+            start: prefs.quietHoursStart ?? "22:00",
+            end: prefs.quietHoursEnd ?? "07:00",
+            timezone: prefs.quietHoursTimezone ?? "UTC",
+          }
+        : null,
+    }
   },
 })
 
@@ -53,6 +83,16 @@ export const upsertPreferences = mutation({
     monthlySpendingSummary: v.boolean(),
     spendingLimitThreshold: v.number(),
     goalDeadlineDays: v.number(),
+    incomeAllocationFrequency: v.union(
+      v.literal("daily"),
+      v.literal("weekly"),
+      v.literal("custom")
+    ),
+    incomeAllocationCustomDay: v.number(),
+    quietHoursEnabled: v.boolean(),
+    quietHoursStart: v.string(),
+    quietHoursEnd: v.string(),
+    quietHoursTimezone: v.string(),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -178,5 +218,59 @@ export const markAllAsRead = mutation({
       await ctx.db.patch(doc._id, { read: true });
     }
     return { success: true };
+  },
+});
+
+export const sendTestNotification = mutation({
+  args: {},
+  returns: v.object({ success: v.boolean() }),
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const notificationId = await ctx.db.insert("notifications", {
+      userId,
+      type: "test",
+      title: "Test notification",
+      body: "Your Wealth Compass notifications are working.",
+      read: false,
+      createdAt: Date.now(),
+    });
+
+    await ctx.scheduler.runAfter(
+      0,
+      internal.actions.sendPush.sendNotificationPush,
+      { notificationId },
+    );
+
+    return { success: true };
+  },
+});
+
+export const clearAllNotifications = mutation({
+  args: {},
+  returns: v.object({ success: v.boolean(), deleted: v.number() }),
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    let deleted = 0;
+    while (true) {
+      const notifications = await ctx.db
+        .query("notifications")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .take(500);
+
+      if (notifications.length === 0) break;
+
+      for (const notification of notifications) {
+        await ctx.db.delete(notification._id);
+      }
+      deleted += notifications.length;
+
+      if (notifications.length < 500) break;
+    }
+
+    return { success: true, deleted };
   },
 });
