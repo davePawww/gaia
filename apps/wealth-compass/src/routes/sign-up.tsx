@@ -19,6 +19,7 @@ function SignUpPage() {
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
   const [loading, setLoading] = useState(false)
+  const [verificationSent, setVerificationSent] = useState(false)
   const updateAllJarPercentages = useMutation(api.jars.updateAllJarPercentages)
 
   // Get personality from localStorage (set by results page)
@@ -58,8 +59,15 @@ function SignUpPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      await signIn("password", { email, password, name, flow: "signUp" })
-      toast.success("Account created successfully!")
+      await signIn("password", {
+        email,
+        password,
+        name,
+        flow: "signUp",
+        redirectTo: "/verify-email",
+      })
+      setVerificationSent(true)
+      toast.success("Check your email to finish creating your account.")
     } catch (error) {
       console.error(error)
       toast.error("Failed to create account. Please try again.")
@@ -98,6 +106,19 @@ function SignUpPage() {
             </p>
           )}
         </div>
+        {verificationSent && (
+          <div className="rounded-lg border bg-muted/40 p-4 text-center text-sm text-muted-foreground">
+            We sent a verification link to {email}. Open it to finish creating
+            your account, or{" "}
+            <Link
+              to="/verify-email"
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              enter the code manually
+            </Link>
+            .
+          </div>
+        )}
         <form onSubmit={handleEmailSignUp} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>

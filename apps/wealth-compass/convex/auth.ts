@@ -1,8 +1,38 @@
 import { convexAuth } from "@convex-dev/auth/server";
 import { Password } from "@convex-dev/auth/providers/Password";
+import { Email } from "@convex-dev/auth/providers/Email";
 import Google from "@auth/core/providers/google";
+import type { EmailProviderSendVerificationRequestParams } from "@auth/core/providers/email";
+import type {
+  EmailConfig,
+  GenericActionCtxWithAuthConfig,
+} from "@convex-dev/auth/server";
 import type { DataModel } from "./_generated/dataModel";
+import { internal } from "./_generated/api";
 import { DEFAULT_JARS, DEFAULT_CATEGORIES } from "./constants";
+
+function createEmailProvider(
+  kind: "password-reset" | "email-verification",
+) {
+  // Convex Auth passes its action context as a second runtime argument even
+  // though the Auth.js callback type only declares the first argument.
+  const sendVerificationRequest = (async (
+    { identifier, url, expires }: EmailProviderSendVerificationRequestParams,
+    ctx: GenericActionCtxWithAuthConfig<DataModel>,
+  ) => {
+    await ctx.runAction(internal.email.sendVerificationEmail, {
+      identifier,
+      url,
+      expiresAt: expires.getTime(),
+      kind,
+    });
+  }) as unknown as EmailConfig["sendVerificationRequest"];
+
+  return Email({
+    maxAge: 60 * 60,
+    sendVerificationRequest,
+  });
+}
 
 export const { auth, signIn, signOut, store } = convexAuth({
   providers: [
@@ -13,6 +43,8 @@ export const { auth, signIn, signOut, store } = convexAuth({
           email: params.email as string,
         };
       },
+      reset: createEmailProvider("password-reset"),
+      verify: createEmailProvider("email-verification"),
     }),
     Google,
   ],
