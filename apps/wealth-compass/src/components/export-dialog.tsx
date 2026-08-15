@@ -21,29 +21,17 @@ import {
   SelectValue,
 } from "@gaia/ui/components/select"
 import { toast } from "sonner"
-import { formatCurrency, type CurrencyCode } from "@wealth-compass/lib/currency"
+import type { CurrencyCode } from "@wealth-compass/lib/currency"
+import {
+  buildCsvExport,
+  buildJsonExport,
+  filterTransactions,
+  type ExportTransaction,
+} from "@wealth-compass/lib/transaction-export"
 
 interface ExportDialogProps {
   currency: CurrencyCode
   children: React.ReactNode
-}
-
-function escapeCsv(value: string): string {
-  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-    return `"${value.replace(/"/g, '""')}"`
-  }
-  return value
-}
-
-function generateCsv(
-  rows: Record<string, string>[],
-  headers: string[],
-): string {
-  const headerLine = headers.map(escapeCsv).join(",")
-  const dataLines = rows.map((row) =>
-    headers.map((h) => escapeCsv(row[h] ?? "")).join(","),
-  )
-  return [headerLine, ...dataLines].join("\n")
 }
 
 function downloadFile(content: string, filename: string, mimeType: string) {
@@ -81,66 +69,28 @@ export function ExportDialog({ currency, children }: ExportDialogProps) {
   const handleExport = () => {
     if (!transactions) return
 
-    let filtered = [...transactions]
-
-    if (dateFrom) {
-      const from = new Date(dateFrom).getTime()
-      filtered = filtered.filter((t) => t.createdAt >= from)
-    }
-    if (dateTo) {
-      const to = new Date(dateTo).getTime() + 86_400_000
-      filtered = filtered.filter((t) => t.createdAt < to)
-    }
-    if (typeFilter !== "all") {
-      filtered = filtered.filter((t) => t.type === typeFilter)
-    }
-    if (jarFilter !== "all") {
-      filtered = filtered.filter(
-        (t) => t.fromJarId === jarFilter || t.toJarId === jarFilter,
-      )
-    }
+    const filtered = filterTransactions(transactions, {
+      dateFrom,
+      dateTo,
+      type: typeFilter,
+      jarId: jarFilter,
+    })
 
     if (filtered.length === 0) {
       toast.error("No transactions match the selected filters")
       return
     }
 
-    const getJarName = (jarId?: string) =>
-      jarBalances?.find((jb) => jb.jar._id === jarId)?.jar.name ?? ""
-
     const today = new Date().toISOString().slice(0, 10)
+    const exportTransactions = filtered as ExportTransaction[]
+    const exportJars = jarBalances ?? []
 
     if (format === "csv") {
-      const headers = ["Date", "Type", "Amount", "From Jar", "To Jar", "Note"]
-      const rows = filtered.map((t) => ({
-        Date: new Date(t.createdAt).toISOString().slice(0, 10),
-        Type: t.type,
-        Amount: formatCurrency(t.amount, currency),
-        "From Jar": getJarName(t.fromJarId),
-        "To Jar": getJarName(t.toJarId),
-        Note: t.note ?? "",
-      }))
-      const csv = generateCsv(rows, headers)
-      downloadFile(
-        csv,
-        `wealth-compass-transactions-${today}.csv`,
-        "text/csv;charset=utf-8",
-      )
+      const exported = buildCsvExport(exportTransactions, exportJars, currency, today)
+      downloadFile(exported.content, exported.filename, exported.mimeType)
     } else {
-      const data = filtered.map((t) => ({
-        date: new Date(t.createdAt).toISOString().slice(0, 10),
-        type: t.type,
-        amount: t.amount,
-        currency,
-        fromJar: getJarName(t.fromJarId) || undefined,
-        toJar: getJarName(t.toJarId) || undefined,
-        note: t.note || undefined,
-      }))
-      downloadFile(
-        JSON.stringify(data, null, 2),
-        `wealth-compass-transactions-${today}.json`,
-        "application/json",
-      )
+      const exported = buildJsonExport(exportTransactions, exportJars, currency, today)
+      downloadFile(exported.content, exported.filename, exported.mimeType)
     }
 
     toast.success(`Exported ${filtered.length} transactions`)
