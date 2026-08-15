@@ -114,19 +114,43 @@ export function NotificationSettings() {
       return
     }
     if (enabled) {
-      const sub = await subscribeToPush(VAPID_PUBLIC_KEY)
-      if (sub) {
+      try {
+        const sub = await subscribeToPush(VAPID_PUBLIC_KEY)
+        if (!sub) {
+          const nextPermission = await getNotificationPermission()
+          setPermission(nextPermission)
+          toast.error(
+            nextPermission === "denied"
+              ? "Notifications are blocked in your browser settings"
+              : "Could not create a browser push subscription",
+          )
+          return
+        }
+
         await savePushSubscription(sub)
         setPushEnabled(true)
         setPermission("granted")
         toast.success("Push notifications enabled")
-      } else {
-        toast.error("Could not enable push notifications")
+      } catch (error) {
+        const errorName = error instanceof Error ? error.name : ""
+        const errorMessage = error instanceof Error ? error.message : ""
+        const isPushServiceError =
+          errorName === "AbortError" || errorMessage.includes("push service error")
+
+        toast.error(
+          isPushServiceError
+            ? "Your browser push service rejected the subscription. In Brave, enable Use Google Services for Push Messaging and try again."
+            : "Could not enable push notifications",
+        )
       }
     } else {
-      await unsubscribeFromPush()
-      setPushEnabled(false)
-      toast.success("Push notifications disabled")
+      try {
+        await unsubscribeFromPush()
+        setPushEnabled(false)
+        toast.success("Push notifications disabled")
+      } catch {
+        toast.error("Could not disable push notifications")
+      }
     }
   }
 
