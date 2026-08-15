@@ -25,9 +25,16 @@ import { WithdrawDialog } from "@wealth-compass/components/withdraw-dialog"
 import { TransferDialog } from "@wealth-compass/components/transfer-dialog"
 import { AddToJarDialog } from "@wealth-compass/components/add-to-jar-dialog"
 import { ExportDialog } from "@wealth-compass/components/export-dialog"
+import {
+  filterAndSortTransactions,
+  paginateTransactions,
+  type TransactionSort,
+} from "@wealth-compass/lib/transaction-list"
 import { Button } from "@gaia/ui/components/button"
 import { toast } from "sonner"
 import { useState } from "react"
+
+const TRANSACTIONS_PAGE_SIZE = 10
 
 function TransactionsPage() {
   const { currency } = useCurrency()
@@ -36,9 +43,19 @@ function TransactionsPage() {
   const categories = useQuery(api.categories.getUserCategories)
   const deleteTransaction = useMutation(api.transactions.deleteTransaction)
   const [deletingId, setDeletingId] = useState<Id<"transactions"> | null>(null)
+  const [search, setSearch] = useState("")
+  const [filterType, setFilterType] = useState("all")
+  const [filterJar, setFilterJar] = useState("all")
   const [filterCategory, setFilterCategory] = useState<string>("all")
+  const [dateFrom, setDateFrom] = useState("")
+  const [dateTo, setDateTo] = useState("")
+  const [sort, setSort] = useState<TransactionSort>("newest")
+  const [page, setPage] = useState(1)
 
-  const isLoading = transactions === undefined || jarBalances === undefined || categories === undefined
+  const isLoading =
+    transactions === undefined ||
+    jarBalances === undefined ||
+    categories === undefined
 
   const handleDelete = async (transactionId: Id<"transactions">) => {
     setDeletingId(transactionId)
@@ -58,11 +75,34 @@ function TransactionsPage() {
   const getCategoryName = (categoryId?: string) =>
     categories?.find((c) => c._id === categoryId)?.name ?? null
 
-  const filteredTransactions = transactions?.filter((t) => {
-    if (filterCategory === "all") return true
-    if (filterCategory === "none") return !t.categoryId
-    return t.categoryId === filterCategory
-  })
+  const resetFilters = () => {
+    setSearch("")
+    setFilterType("all")
+    setFilterJar("all")
+    setFilterCategory("all")
+    setDateFrom("")
+    setDateTo("")
+    setSort("newest")
+    setPage(1)
+  }
+
+  const filteredTransactions = filterAndSortTransactions(
+    transactions ?? [],
+    {
+      search,
+      type: filterType,
+      jarId: filterJar,
+      categoryId: filterCategory,
+      dateFrom,
+      dateTo,
+    },
+    sort
+  )
+  const paginatedTransactions = paginateTransactions(
+    filteredTransactions,
+    page,
+    TRANSACTIONS_PAGE_SIZE
+  )
 
   const formatDate = (timestamp: number) =>
     new Date(timestamp).toLocaleDateString("en-US", {
@@ -113,32 +153,126 @@ function TransactionsPage() {
 
       <Card>
         <CardHeader>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle className="text-lg">All Transactions</CardTitle>
-            {categories && categories.length > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Filter:</span>
-                <select
-                  value={filterCategory}
-                  onChange={(e) => setFilterCategory(e.target.value)}
-                  className="rounded-md border bg-background px-2 py-1 text-xs"
-                >
-                  <option value="all">All Categories</option>
-                  <option value="none">No Category</option>
-                  {[...new Set(categories.map((c) => c.jarName))].map((jarName) => (
-                    <optgroup key={jarName} label={jarName}>
-                      {categories
-                        .filter((c) => c.jarName === jarName)
-                        .map((cat) => (
-                          <option key={cat._id} value={cat._id}>
-                            {cat.name}
-                          </option>
-                        ))}
-                    </optgroup>
-                  ))}
-                </select>
-              </div>
-            )}
+          <div className="space-y-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <CardTitle className="text-lg">All Transactions</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                {paginatedTransactions.total} matching transaction
+                {paginatedTransactions.total === 1 ? "" : "s"}
+              </p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value)
+                  setPage(1)
+                }}
+                placeholder="Search notes..."
+                aria-label="Search transactions"
+                className="rounded-md border bg-background px-3 py-2 text-sm"
+              />
+              <select
+                value={filterType}
+                onChange={(e) => {
+                  setFilterType(e.target.value)
+                  setPage(1)
+                }}
+                aria-label="Transaction type"
+                className="rounded-md border bg-background px-3 py-2 text-sm"
+              >
+                <option value="all">All Types</option>
+                <option value="income">Income</option>
+                <option value="withdrawal">Withdrawal</option>
+                <option value="transfer">Transfer</option>
+              </select>
+              <select
+                value={filterJar}
+                onChange={(e) => {
+                  setFilterJar(e.target.value)
+                  setPage(1)
+                }}
+                aria-label="Jar"
+                className="rounded-md border bg-background px-3 py-2 text-sm"
+              >
+                <option value="all">All Jars</option>
+                {jarBalances?.map((jarBalance) => (
+                  <option key={jarBalance.jar._id} value={jarBalance.jar._id}>
+                    {jarBalance.jar.name}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={filterCategory}
+                onChange={(e) => {
+                  setFilterCategory(e.target.value)
+                  setPage(1)
+                }}
+                aria-label="Category"
+                className="rounded-md border bg-background px-3 py-2 text-sm"
+              >
+                <option value="all">All Categories</option>
+                <option value="none">No Category</option>
+                {categories &&
+                  [...new Set(categories.map((c) => c.jarName))].map(
+                    (jarName) => (
+                      <optgroup key={jarName} label={jarName}>
+                        {categories
+                          .filter((c) => c.jarName === jarName)
+                          .map((cat) => (
+                            <option key={cat._id} value={cat._id}>
+                              {cat.name}
+                            </option>
+                          ))}
+                      </optgroup>
+                    )
+                  )}
+              </select>
+              <label className="flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm">
+                <span className="text-xs text-muted-foreground">From</span>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => {
+                    setDateFrom(e.target.value)
+                    setPage(1)
+                  }}
+                  aria-label="From date"
+                  className="min-w-0 flex-1 bg-transparent"
+                />
+              </label>
+              <label className="flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm">
+                <span className="text-xs text-muted-foreground">To</span>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => {
+                    setDateTo(e.target.value)
+                    setPage(1)
+                  }}
+                  aria-label="To date"
+                  className="min-w-0 flex-1 bg-transparent"
+                />
+              </label>
+              <select
+                value={sort}
+                onChange={(e) => {
+                  setSort(e.target.value as TransactionSort)
+                  setPage(1)
+                }}
+                aria-label="Sort transactions"
+                className="rounded-md border bg-background px-3 py-2 text-sm"
+              >
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="amount-high">Highest amount</option>
+                <option value="amount-low">Lowest amount</option>
+              </select>
+              <Button type="button" variant="ghost" onClick={resetFilters}>
+                Reset filters
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -157,9 +291,9 @@ function TransactionsPage() {
                 </div>
               ))}
             </div>
-          ) : filteredTransactions && filteredTransactions.length > 0 ? (
+          ) : paginatedTransactions.items.length > 0 ? (
             <div className="space-y-4">
-              {filteredTransactions.map((t) => {
+              {paginatedTransactions.items.map((t) => {
                 const categoryName = getCategoryName(t.categoryId)
                 return (
                   <div
@@ -179,7 +313,9 @@ function TransactionsPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium capitalize">{t.type}</p>
+                        <p className="text-sm font-medium capitalize">
+                          {t.type}
+                        </p>
                         <span className="text-xs text-muted-foreground">
                           {t.type === "income" &&
                             t.toJarId &&
@@ -198,7 +334,9 @@ function TransactionsPage() {
                           </span>
                         )}
                         {t.note && (
-                          <p className="text-xs text-muted-foreground truncate">{t.note}</p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {t.note}
+                          </p>
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground">
@@ -221,7 +359,7 @@ function TransactionsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
+                        className="h-8 w-8 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-destructive"
                         onClick={() => handleDelete(t._id)}
                         disabled={deletingId === t._id}
                         aria-label="Delete transaction"
@@ -232,13 +370,36 @@ function TransactionsPage() {
                   </div>
                 )
               })}
+              {paginatedTransactions.hasMore && (
+                <div className="flex justify-center pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setPage((currentPage) => currentPage + 1)}
+                  >
+                    Load more transactions
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              {filterCategory !== "all"
-                ? "No transactions match this filter."
-                : "No transactions yet. Allocate your first income to get started!"}
-            </p>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {transactions && transactions.length > 0
+                  ? "No transactions match your filters."
+                  : "No transactions yet. Allocate your first income to get started!"}
+              </p>
+              {transactions && transactions.length > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={resetFilters}
+                >
+                  Reset filters
+                </Button>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>
