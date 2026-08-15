@@ -112,6 +112,7 @@ function SignUpPage() {
             your account, or{" "}
             <Link
               to="/verify-email"
+              search={{ code: undefined }}
               className="text-primary underline-offset-4 hover:underline"
             >
               enter the code manually

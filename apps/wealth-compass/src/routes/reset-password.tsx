@@ -10,10 +10,7 @@ import { toast } from "sonner"
 function ResetPasswordPage() {
   const navigate = useNavigate()
   const { signIn } = useAuthActions()
-  const code =
-    typeof window === "undefined"
-      ? ""
-      : new URLSearchParams(window.location.search).get("code") ?? ""
+  const { code = "" } = Route.useSearch()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmation, setConfirmation] = useState("")
@@ -124,5 +121,8 @@ function ResetPasswordPage() {
 }
 
 export const Route = createFileRoute("/reset-password")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    code: typeof search.code === "string" ? search.code : undefined,
+  }),
   component: ResetPasswordPage,
 })

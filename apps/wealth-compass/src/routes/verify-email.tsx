@@ -10,10 +10,7 @@ import { toast } from "sonner"
 function VerifyEmailPage() {
   const navigate = useNavigate()
   const { signIn } = useAuthActions()
-  const code =
-    typeof window === "undefined"
-      ? ""
-      : new URLSearchParams(window.location.search).get("code") ?? ""
+  const { code = "" } = Route.useSearch()
   const [email, setEmail] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
@@ -89,5 +86,8 @@ function VerifyEmailPage() {
 }
 
 export const Route = createFileRoute("/verify-email")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    code: typeof search.code === "string" ? search.code : undefined,
+  }),
   component: VerifyEmailPage,
 })
