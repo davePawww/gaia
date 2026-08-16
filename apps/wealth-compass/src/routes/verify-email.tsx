@@ -6,11 +6,16 @@ import { Input } from "@gaia/ui/components/input"
 import { Label } from "@gaia/ui/components/label"
 import { ChevronLeft } from "lucide-react"
 import { toast } from "sonner"
+import { resolveVerificationCode } from "../lib/auth-code"
 
 function VerifyEmailPage() {
   const navigate = useNavigate()
   const { signIn } = useAuthActions()
-  const { code = "" } = Route.useSearch()
+  const { code: routeCode } = Route.useSearch()
+  const code = resolveVerificationCode(
+    routeCode,
+    typeof window === "undefined" ? "" : window.location.search,
+  )
   const [email, setEmail] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
