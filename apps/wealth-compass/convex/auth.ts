@@ -34,6 +34,9 @@ function createEmailProvider(
   });
 }
 
+const passwordResetEmailProvider = createEmailProvider("password-reset");
+const emailVerificationProvider = createEmailProvider("email-verification");
+
 export const { auth, signIn, signOut, store } = convexAuth({
   providers: [
     Password<DataModel>({
@@ -43,9 +46,10 @@ export const { auth, signIn, signOut, store } = convexAuth({
           email: params.email as string,
         };
       },
-      reset: createEmailProvider("password-reset"),
-      verify: createEmailProvider("email-verification"),
+      reset: passwordResetEmailProvider,
+      verify: emailVerificationProvider,
     }),
+    emailVerificationProvider,
     Google,
   ],
   callbacks: {
