@@ -10,6 +10,13 @@ test("falls back to the browser URL when the router search is empty", () => {
   assert.equal(resolveVerificationCode(undefined, "?code=url-code"), "url-code")
 })
 
+test("falls back to a hash when the browser removes the query string", () => {
+  assert.equal(
+    resolveVerificationCode(undefined, "", "#code=hash-code"),
+    "hash-code",
+  )
+})
+
 test("returns an empty code when neither source contains one", () => {
   assert.equal(resolveVerificationCode(undefined, "?other=value"), "")
 })

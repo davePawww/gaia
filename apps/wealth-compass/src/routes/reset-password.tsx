@@ -15,6 +15,7 @@ function ResetPasswordPage() {
   const code = resolveVerificationCode(
     routeCode,
     typeof window === "undefined" ? "" : window.location.search,
+    typeof window === "undefined" ? "" : window.location.hash,
   )
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")

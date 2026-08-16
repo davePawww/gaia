@@ -2,6 +2,16 @@ export type VerificationEmailKind =
   | "password-reset"
   | "email-verification"
 
+export function moveVerificationCodeToFragment(url: string) {
+  const parsedUrl = new URL(url)
+  const code = parsedUrl.searchParams.get("code")
+  if (!code) return url
+
+  parsedUrl.searchParams.delete("code")
+  parsedUrl.hash = `code=${encodeURIComponent(code)}`
+  return parsedUrl.toString()
+}
+
 export function normalizeGmailAppPassword(value: string) {
   return value.replace(/\s/g, "")
 }

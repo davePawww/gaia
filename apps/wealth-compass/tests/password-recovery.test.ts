@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import {
   buildVerificationEmail,
+  moveVerificationCodeToFragment,
   normalizeGmailAppPassword,
 } from "../convex/emailContent.ts"
 
@@ -40,4 +41,13 @@ test("builds a separate email-verification message", () => {
 
   assert.equal(email.subject, "Verify your Wealth Compass email")
   assert.match(email.text, /verify your email/)
+})
+
+test("moves verification codes into a browser-safe URL fragment", () => {
+  assert.equal(
+    moveVerificationCodeToFragment(
+      "http://localhost:5173/reset-password?code=abc",
+    ),
+    "http://localhost:5173/reset-password#code=abc",
+  )
 })

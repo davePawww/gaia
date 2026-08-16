@@ -15,6 +15,7 @@ function VerifyEmailPage() {
   const code = resolveVerificationCode(
     routeCode,
     typeof window === "undefined" ? "" : window.location.search,
+    typeof window === "undefined" ? "" : window.location.hash,
   )
   const [email, setEmail] = useState("")
   const [error, setError] = useState("")

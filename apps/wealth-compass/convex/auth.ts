@@ -10,6 +10,7 @@ import type {
 import type { DataModel } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { DEFAULT_JARS, DEFAULT_CATEGORIES } from "./constants";
+import { moveVerificationCodeToFragment } from "./emailContent";
 
 function createEmailProvider(
   kind: "password-reset" | "email-verification",
@@ -22,7 +23,7 @@ function createEmailProvider(
   ) => {
     await ctx.runAction(internal.email.sendVerificationEmail, {
       identifier,
-      url,
+      url: moveVerificationCodeToFragment(url),
       expiresAt: expires.getTime(),
       kind,
     });
