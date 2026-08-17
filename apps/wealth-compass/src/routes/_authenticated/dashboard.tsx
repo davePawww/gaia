@@ -32,6 +32,16 @@ import { WithdrawDialog } from "@wealth-compass/components/withdraw-dialog"
 import { TransferDialog } from "@wealth-compass/components/transfer-dialog"
 import { useCurrency } from "@wealth-compass/lib/use-currency"
 import { formatCurrency, type CurrencyCode } from "@wealth-compass/lib/currency"
+import {
+  buildDashboardMonthlyData,
+  type DashboardGoal,
+  type DashboardJarBalance,
+} from "@wealth-compass/lib/dashboard-data"
+import {
+  MonthlyBalanceBarChart,
+  SpendingTrendLineChart,
+} from "@wealth-compass/components/insights-charts"
+import { DashboardGoalsCard } from "@wealth-compass/components/dashboard-goals-card"
 
 const JAR_COLORS: Record<string, string> = {
   NEC: "#EF4444",
@@ -46,7 +56,8 @@ function SpendingInsightsCard({ currency }: { currency: CurrencyCode }) {
   const spendingByJar = useQuery(api.insights.getSpendingByJar, { days: 30 })
   const summaryStats = useQuery(api.insights.getSummaryStats, { days: 30 })
 
-  const totalSpent = spendingByJar?.reduce((sum, item) => sum + item.total, 0) ?? 0
+  const totalSpent =
+    spendingByJar?.reduce((sum, item) => sum + item.total, 0) ?? 0
 
   return (
     <Card>
@@ -68,7 +79,10 @@ function SpendingInsightsCard({ currency }: { currency: CurrencyCode }) {
             <p className="text-sm text-muted-foreground">
               No spending data for the last 30 days.
             </p>
-            <Link to="/insights" className="text-sm font-medium text-primary hover:underline">
+            <Link
+              to="/insights"
+              className="text-sm font-medium text-primary hover:underline"
+            >
               View Insights &rarr;
             </Link>
           </div>
@@ -87,7 +101,10 @@ function SpendingInsightsCard({ currency }: { currency: CurrencyCode }) {
             </div>
             <div className="flex flex-wrap gap-4">
               {spendingByJar.map((item) => (
-                <div key={item.jarId} className="flex items-center gap-2 text-sm">
+                <div
+                  key={item.jarId}
+                  className="flex items-center gap-2 text-sm"
+                >
                   <div
                     className="h-3 w-3 rounded-full"
                     style={{ backgroundColor: item.color }}
@@ -122,6 +139,7 @@ function DashboardPage() {
   const { currency } = useCurrency()
   const jarBalances = useQuery(api.jars.getJarBalances)
   const transactions = useQuery(api.transactions.getUserTransactions)
+  const goals = useQuery(api.goals.getUserGoals)
 
   const isLoading = jarBalances === undefined || transactions === undefined
 
@@ -148,7 +166,7 @@ function DashboardPage() {
     Object.entries(JAR_COLORS).map(([name, color]) => [
       name,
       { label: name, color },
-    ]),
+    ])
   )
 
   const recentTransactions =
@@ -159,6 +177,24 @@ function DashboardPage() {
 
   const getJarName = (jarId?: string) =>
     jarBalances?.find((jb) => jb.jar._id === jarId)?.jar.name ?? "N/A"
+
+  const monthlyData =
+    jarBalances && transactions
+      ? buildDashboardMonthlyData(
+          transactions,
+          jarBalances.map((item) => ({
+            id: item.jar._id,
+            name: item.jar.name,
+            color: item.jar.color,
+          }))
+        )
+      : undefined
+
+  const dashboardGoalBalances: DashboardJarBalance[] | undefined =
+    jarBalances?.map((item) => ({
+      jarId: item.jar._id,
+      balance: item.balance,
+    }))
 
   return (
     <div className="space-y-6">
@@ -246,9 +282,7 @@ function DashboardPage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
-                Largest Jar
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Largest Jar</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -257,16 +291,16 @@ function DashboardPage() {
                   <div className="text-2xl font-bold">
                     {
                       jarBalances.reduce((max, jb) =>
-                        jb.balance > max.balance ? jb : max,
+                        jb.balance > max.balance ? jb : max
                       ).jar.name
                     }
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {formatCurrency(
                       jarBalances.reduce((max, jb) =>
-                        jb.balance > max.balance ? jb : max,
+                        jb.balance > max.balance ? jb : max
                       ).balance,
-                      currency,
+                      currency
                     )}
                   </p>
                 </>
@@ -279,6 +313,57 @@ function DashboardPage() {
       )}
 
       <SpendingInsightsCard currency={currency} />
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Monthly Jar Balances</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {monthlyData === undefined ? (
+              <Skeleton className="h-[300px] w-full rounded-xl" />
+            ) : monthlyData.balances.some((item) => item.balance !== 0) ? (
+              <MonthlyBalanceBarChart data={monthlyData.balances} />
+            ) : (
+              <div className="flex h-[300px] items-center justify-center text-center text-sm text-muted-foreground">
+                Allocate income to see monthly jar balances.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Spending Trends</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {monthlyData === undefined ? (
+              <Skeleton className="h-[300px] w-full rounded-xl" />
+            ) : monthlyData.spending.some((item) => item.total > 0) ? (
+              <SpendingTrendLineChart data={monthlyData.spending} />
+            ) : (
+              <div className="flex h-[300px] items-center justify-center text-center text-sm text-muted-foreground">
+                Withdraw or transfer funds to see spending trends.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <DashboardGoalsCard
+        goals={
+          goals?.map((goal) => ({
+            id: goal._id,
+            name: goal.name,
+            type: goal.type,
+            targetAmount: goal.targetAmount,
+            jarId: goal.jarId,
+            deadline: goal.deadline,
+          })) as DashboardGoal[] | undefined
+        }
+        jarBalances={dashboardGoalBalances}
+        currency={currency}
+      />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -352,7 +437,9 @@ function DashboardPage() {
                       }: {
                         name?: string
                         percent?: number
-                      }) => `${name ?? ""} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                      }) =>
+                        `${name ?? ""} ${((percent ?? 0) * 100).toFixed(0)}%`
+                      }
                       labelLine={false}
                     >
                       {chartData.map((entry) => (

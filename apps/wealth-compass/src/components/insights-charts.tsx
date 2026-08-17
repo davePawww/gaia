@@ -27,6 +27,7 @@ import {
 import { TrendingUp, TrendingDown } from "lucide-react"
 import { useCurrency } from "@wealth-compass/lib/use-currency"
 import { formatCurrency } from "@wealth-compass/lib/currency"
+import { formatDashboardMonth } from "@wealth-compass/lib/dashboard-data"
 
 interface SpendingByJarItem {
   jarId: string
@@ -37,9 +38,18 @@ interface SpendingByJarItem {
 
 interface MonthlyTrendItem {
   month: string
+  jarId?: string
   jarName: string
   color: string
   total: number
+}
+
+interface MonthlyBalanceItem {
+  month: string
+  jarId: string
+  jarName: string
+  color: string
+  balance: number
 }
 
 interface IncomeVsSpendingItem {
@@ -60,6 +70,76 @@ interface MonthComparisonData {
   previous: { income: number; spending: number }
 }
 
+function getSeries(
+  data: Array<{ jarId?: string; jarName: string; color: string }>
+) {
+  const sources = new Map<string, { name: string; color: string }>()
+  for (const item of data) {
+    const source = item.jarId ?? item.jarName
+    if (!sources.has(source)) {
+      sources.set(source, { name: item.jarName, color: item.color })
+    }
+  }
+
+  return [...sources.entries()].map(([source, item], index) => ({
+    source,
+    key: `series-${index}`,
+    ...item,
+  }))
+}
+
+export function MonthlyBalanceBarChart({
+  data,
+}: {
+  data: MonthlyBalanceItem[]
+}) {
+  const { currency } = useCurrency()
+  const series = getSeries(data)
+  const seriesKeys = new Map(series.map((item) => [item.source, item.key]))
+  const months = [...new Set(data.map((item) => item.month))]
+  const chartData = months.map((month) => {
+    const row: Record<string, string | number> = { month }
+    for (const item of data.filter((entry) => entry.month === month)) {
+      const key = seriesKeys.get(item.jarId)
+      if (key) row[key] = item.balance
+    }
+    return row
+  })
+  const chartConfig: ChartConfig = Object.fromEntries(
+    series.map((item) => [item.key, { label: item.name, color: item.color }])
+  )
+
+  return (
+    <ChartContainer
+      config={chartConfig}
+      className="h-[300px] w-full"
+      aria-label="Monthly jar balances chart"
+    >
+      <BarChart data={chartData}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="month" tickFormatter={formatDashboardMonth} />
+        <YAxis />
+        <ChartTooltip
+          content={
+            <ChartTooltipContent
+              labelFormatter={(value) => formatDashboardMonth(String(value))}
+              formatter={(value) => formatCurrency(Number(value), currency)}
+            />
+          }
+        />
+        {series.map((item) => (
+          <Bar
+            key={item.key}
+            dataKey={item.key}
+            fill={`var(--color-${item.key})`}
+            radius={[4, 4, 0, 0]}
+          />
+        ))}
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
 export function SpendingByJarBarChart({ data }: { data: SpendingByJarItem[] }) {
   const { currency } = useCurrency()
 
@@ -67,7 +147,7 @@ export function SpendingByJarBarChart({ data }: { data: SpendingByJarItem[] }) {
     data.map((item) => [
       item.jarName,
       { label: item.jarName, color: item.color },
-    ]),
+    ])
   )
 
   return (
@@ -99,43 +179,47 @@ export function SpendingByJarBarChart({ data }: { data: SpendingByJarItem[] }) {
 export function SpendingTrendLineChart({ data }: { data: MonthlyTrendItem[] }) {
   const { currency } = useCurrency()
 
-  const jarNames = [...new Set(data.map((d) => d.jarName))]
+  const series = getSeries(data)
+  const seriesKeys = new Map(series.map((item) => [item.source, item.key]))
   const months = [...new Set(data.map((d) => d.month))]
 
   const chartData = months.map((month) => {
     const row: Record<string, string | number> = { month }
     for (const item of data.filter((d) => d.month === month)) {
-      row[item.jarName] = item.total
+      const key = seriesKeys.get(item.jarId ?? item.jarName)
+      if (key) row[key] = item.total
     }
     return row
   })
 
   const chartConfig: ChartConfig = Object.fromEntries(
-    jarNames.map((name) => {
-      const item = data.find((d) => d.jarName === name)
-      return [name, { label: name, color: item?.color ?? "#888" }]
-    }),
+    series.map((item) => [item.key, { label: item.name, color: item.color }])
   )
 
   return (
-    <ChartContainer config={chartConfig} className="h-[300px] w-full">
+    <ChartContainer
+      config={chartConfig}
+      className="h-[300px] w-full"
+      aria-label="Monthly spending trend chart"
+    >
       <LineChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="month" />
+        <XAxis dataKey="month" tickFormatter={formatDashboardMonth} />
         <YAxis />
         <ChartTooltip
           content={
             <ChartTooltipContent
+              labelFormatter={(value) => formatDashboardMonth(String(value))}
               formatter={(value) => formatCurrency(Number(value), currency)}
             />
           }
         />
-        {jarNames.map((name) => (
+        {series.map((item) => (
           <Line
-            key={name}
+            key={item.key}
             type="monotone"
-            dataKey={name}
-            stroke={`var(--color-${name})`}
+            dataKey={item.key}
+            stroke={`var(--color-${item.key})`}
             strokeWidth={2}
             dot={false}
           />
@@ -147,7 +231,9 @@ export function SpendingTrendLineChart({ data }: { data: MonthlyTrendItem[] }) {
 
 export function IncomeVsSpendingLineChart({
   data,
-}: { data: IncomeVsSpendingItem[] }) {
+}: {
+  data: IncomeVsSpendingItem[]
+}) {
   const { currency } = useCurrency()
 
   const chartConfig: ChartConfig = {
@@ -189,9 +275,7 @@ export function IncomeVsSpendingLineChart({
   )
 }
 
-export function CategoryBreakdownPieChart({
-  data,
-}: { data: CategoryItem[] }) {
+export function CategoryBreakdownPieChart({ data }: { data: CategoryItem[] }) {
   const { currency } = useCurrency()
 
   const aggregated = Object.values(
@@ -206,8 +290,8 @@ export function CategoryBreakdownPieChart({
         acc[item.categoryName].value += item.total
         return acc
       },
-      {} as Record<string, { name: string; value: number }>,
-    ),
+      {} as Record<string, { name: string; value: number }>
+    )
   )
 
   const COLORS = [
@@ -227,7 +311,7 @@ export function CategoryBreakdownPieChart({
     aggregated.map((item, i) => [
       item.name,
       { label: item.name, color: COLORS[i % COLORS.length] },
-    ]),
+    ])
   )
 
   return (
@@ -249,20 +333,14 @@ export function CategoryBreakdownPieChart({
           cy="50%"
           outerRadius={100}
           strokeWidth={2}
-          label={({
-            name,
-            percent,
-          }: {
-            name?: string
-            percent?: number
-          }) => `${name ?? ""} ${((percent ?? 0) * 100).toFixed(0)}%`}
+          label={({ name, percent }: { name?: string; percent?: number }) =>
+            `${name ?? ""} ${((percent ?? 0) * 100).toFixed(0)}%`
+          }
           labelLine={false}
         >
           {aggregated.map((entry) => {
             const idx = aggregated.indexOf(entry)
-            return (
-              <Cell key={entry.name} fill={COLORS[idx % COLORS.length]} />
-            )
+            return <Cell key={entry.name} fill={COLORS[idx % COLORS.length]} />
           })}
         </Pie>
       </PieChart>
@@ -270,9 +348,7 @@ export function CategoryBreakdownPieChart({
   )
 }
 
-export function MonthComparisonCard({
-  data,
-}: { data: MonthComparisonData }) {
+export function MonthComparisonCard({ data }: { data: MonthComparisonData }) {
   const { currency } = useCurrency()
 
   const spendingDelta = data.current.spending - data.previous.spending
@@ -369,8 +445,8 @@ export function TopCategoriesList({ data }: { data: CategoryItem[] }) {
         acc[item.categoryName].total += item.total
         return acc
       },
-      {} as Record<string, { categoryName: string; total: number }>,
-    ),
+      {} as Record<string, { categoryName: string; total: number }>
+    )
   ).sort((a, b) => b.total - a.total)
 
   const maxTotal = aggregated[0]?.total ?? 1
