@@ -52,6 +52,8 @@ export default defineSchema({
   recurringIncomes: defineTable({
     userId: v.id("users"),
     amount: v.number(),
+    source: v.optional(v.string()),
+    note: v.optional(v.string()),
     frequency: v.union(
       v.literal("weekly"),
       v.literal("biweekly"),
@@ -59,9 +61,13 @@ export default defineSchema({
     ),
     nextOccurrence: v.number(),
     active: v.boolean(),
+    lastAllocatedAt: v.optional(v.number()),
+    lastAttemptAt: v.optional(v.number()),
+    lastError: v.optional(v.string()),
   })
     .index("by_userId", ["userId"])
-    .index("by_nextOccurrence", ["nextOccurrence"]),
+    .index("by_nextOccurrence", ["nextOccurrence"])
+    .index("by_active_nextOccurrence", ["active", "nextOccurrence"]),
 
   goals: defineTable({
     userId: v.id("users"),
@@ -132,6 +138,7 @@ export default defineSchema({
       v.literal("goal_completed"),
       v.literal("spending_limit_warning"),
       v.literal("monthly_spending_summary"),
+      v.literal("recurring_income_failed"),
       v.literal("test")
     ),
     title: v.string(),

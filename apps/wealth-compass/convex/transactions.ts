@@ -268,7 +268,10 @@ export const deleteTransaction = mutation({
   },
 })
 
-async function checkGoalCompletions(ctx: MutationCtx, userId: Id<"users">) {
+export async function checkGoalCompletions(
+  ctx: MutationCtx,
+  userId: Id<"users">
+) {
   const goals = await ctx.db
     .query("goals")
     .withIndex("by_userId", (q) => q.eq("userId", userId))

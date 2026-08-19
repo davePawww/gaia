@@ -17,24 +17,32 @@ import { toast } from "sonner"
 import { useTheme } from "@gaia/ui/lib/theme-provider"
 import { useCurrency } from "@wealth-compass/lib/use-currency"
 import { CurrencySelector } from "@wealth-compass/components/currency-selector"
-import { PERSONALITY_PRESETS, DEFAULT_JARS, JAR_FULL_NAMES } from "../../../convex/constants"
+import {
+  PERSONALITY_PRESETS,
+  DEFAULT_JARS,
+  JAR_FULL_NAMES,
+} from "../../../convex/constants"
 import { useState, useEffect } from "react"
 import { Trash2, Plus } from "lucide-react"
 import { NotificationSettings } from "../../components/notification-settings"
+import { RecurringIncomeSettings } from "../../components/recurring-income-settings"
 import type { Id } from "../../../convex/_generated/dataModel"
 
 function SettingsPage() {
   const { theme, setTheme } = useTheme()
-  useCurrency()
+  const { currency } = useCurrency()
   const jars = useQuery(api.jars.getUserJars)
   const categories = useQuery(api.categories.getUserCategories)
   const updateJar = useMutation(api.jars.updateJar)
   const updateAllJarPercentages = useMutation(api.jars.updateAllJarPercentages)
   const user = useQuery(api.users.getCurrentUser)
 
-  const isLoading = jars === undefined || user === undefined || categories === undefined
+  const isLoading =
+    jars === undefined || user === undefined || categories === undefined
 
-  const handlePresetSelect = async (preset: (typeof PERSONALITY_PRESETS)[number]) => {
+  const handlePresetSelect = async (
+    preset: (typeof PERSONALITY_PRESETS)[number]
+  ) => {
     try {
       await updateAllJarPercentages({ percentages: preset.percentages })
       toast.success(`Applied "${preset.name}" preset`)
@@ -105,13 +113,22 @@ function SettingsPage() {
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
                       {DEFAULT_JARS.map((jar) => (
-                        <div key={jar.name} className="flex items-center gap-1.5">
+                        <div
+                          key={jar.name}
+                          className="flex items-center gap-1.5"
+                        >
                           <div
                             className="h-2 w-2 rounded-full"
                             style={{ backgroundColor: jar.color }}
                           />
                           <span className="text-muted-foreground">
-                            {jar.name} {preset.percentages[jar.name as keyof typeof preset.percentages]}%
+                            {jar.name}{" "}
+                            {
+                              preset.percentages[
+                                jar.name as keyof typeof preset.percentages
+                              ]
+                            }
+                            %
                           </span>
                         </div>
                       ))}
@@ -148,7 +165,9 @@ function SettingsPage() {
                 <CategorySettings
                   key={jar._id}
                   jarName={jar.name}
-                  categories={categories?.filter((c) => c.jarName === jar.name) ?? []}
+                  categories={
+                    categories?.filter((c) => c.jarName === jar.name) ?? []
+                  }
                 />
               ))}
             </CardContent>
@@ -157,9 +176,7 @@ function SettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Appearance</CardTitle>
-              <CardDescription>
-                Customize the look and feel
-              </CardDescription>
+              <CardDescription>Customize the look and feel</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -184,6 +201,8 @@ function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+
+          <RecurringIncomeSettings currency={currency} />
 
           <NotificationSettings />
         </>
@@ -292,18 +311,25 @@ function CategorySettings({
       setNewCategory("")
       toast.success("Category added")
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to add category")
+      toast.error(
+        error instanceof Error ? error.message : "Failed to add category"
+      )
     }
   }
 
   const handleRename = async (categoryId: string) => {
     if (!editingName.trim()) return
     try {
-      await renameCategory({ categoryId: categoryId as Id<"categories">, name: editingName.trim() })
+      await renameCategory({
+        categoryId: categoryId as Id<"categories">,
+        name: editingName.trim(),
+      })
       setEditingId(null)
       toast.success("Category renamed")
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to rename category")
+      toast.error(
+        error instanceof Error ? error.message : "Failed to rename category"
+      )
     }
   }
 
@@ -337,7 +363,7 @@ function CategorySettings({
           </span>
         </div>
         <Button variant="ghost" size="sm" onClick={handleReset}>
-Reset to Defaults
+          Reset to Defaults
         </Button>
       </div>
       <div className="mt-3 space-y-2">
@@ -374,7 +400,7 @@ Reset to Defaults
             ) : (
               <>
                 <span
-                  className="flex-1 text-sm cursor-pointer hover:underline"
+                  className="flex-1 cursor-pointer text-sm hover:underline"
                   onClick={() => {
                     setEditingId(cat._id)
                     setEditingName(cat.name)

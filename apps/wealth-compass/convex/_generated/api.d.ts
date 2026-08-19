@@ -23,6 +23,8 @@ import type * as http from "../http.js";
 import type * as insights from "../insights.js";
 import type * as jars from "../jars.js";
 import type * as notifications from "../notifications.js";
+import type * as recurring from "../recurring.js";
+import type * as recurringIncomes from "../recurringIncomes.js";
 import type * as transactions from "../transactions.js";
 import type * as users from "../users.js";
 
@@ -48,6 +50,8 @@ declare const fullApi: ApiFromModules<{
   insights: typeof insights;
   jars: typeof jars;
   notifications: typeof notifications;
+  recurring: typeof recurring;
+  recurringIncomes: typeof recurringIncomes;
   transactions: typeof transactions;
   users: typeof users;
 }>;
