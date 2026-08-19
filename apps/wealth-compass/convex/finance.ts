@@ -5,6 +5,13 @@ export type BalanceTransaction = {
   toJarId?: string
 }
 
+export type GoalCompletionCandidate = {
+  type: "jar" | "netWorth"
+  targetAmount: number
+  jarId?: string
+  status?: "active" | "completed" | "archived"
+}
+
 /**
  * Calculates the balance for one jar from the immutable transaction ledger.
  * Keeping this logic in one place prevents queries and mutations from drifting
@@ -46,4 +53,20 @@ export function sumBalances(
   balances: Readonly<Record<string, number>>
 ): number {
   return Object.values(balances).reduce((total, balance) => total + balance, 0)
+}
+
+export function shouldMarkGoalComplete(
+  goal: GoalCompletionCandidate,
+  jarBalances: Readonly<Record<string, number>>
+): boolean {
+  if (goal.status === "archived" || goal.status === "completed") {
+    return false
+  }
+
+  const currentValue =
+    goal.type === "netWorth"
+      ? sumBalances(jarBalances)
+      : ((goal.jarId ? jarBalances[goal.jarId] : undefined) ?? 0)
+
+  return currentValue >= goal.targetAmount
 }

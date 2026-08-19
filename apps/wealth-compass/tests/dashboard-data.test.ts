@@ -2,8 +2,11 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import {
   buildDashboardMonthlyData,
+  buildGoalProgressHistory,
   getGoalProgress,
+  getGoalStatus,
   type DashboardJar,
+  type DashboardGoal,
   type DashboardTransaction,
 } from "../src/lib/dashboard-data.ts"
 
@@ -95,5 +98,71 @@ test("includes zero-value months and calculates goal progress", () => {
       ]
     ),
     { currentAmount: 350, percentage: 100 }
+  )
+})
+
+test("derives goal status and progress history from the ledger", () => {
+  const transactions: DashboardTransaction[] = [
+    {
+      type: "income",
+      amount: 100,
+      toJarId: "nec",
+      createdAt: timestamp(1, 15),
+    },
+    {
+      type: "income",
+      amount: 100,
+      toJarId: "nec",
+      createdAt: timestamp(2, 15),
+    },
+  ]
+  const goal = {
+    name: "Emergency fund",
+    type: "jar",
+    targetAmount: 250,
+    jarId: "nec",
+  } satisfies DashboardGoal
+
+  assert.deepEqual(
+    buildGoalProgressHistory(goal, transactions, jars, timestamp(4, 15), 4),
+    [
+      { month: "2026-02", currentAmount: 100, percentage: 40 },
+      { month: "2026-03", currentAmount: 200, percentage: 80 },
+      { month: "2026-04", currentAmount: 200, percentage: 80 },
+      { month: "2026-05", currentAmount: 200, percentage: 80 },
+    ]
+  )
+
+  assert.equal(
+    getGoalStatus(
+      goal,
+      { currentAmount: 200, percentage: 80 },
+      timestamp(4, 15)
+    ),
+    "active"
+  )
+  assert.equal(
+    getGoalStatus(
+      goal,
+      { currentAmount: 250, percentage: 100 },
+      timestamp(4, 15)
+    ),
+    "completed"
+  )
+  assert.equal(
+    getGoalStatus(
+      { ...goal, deadline: timestamp(3, 1) },
+      { currentAmount: 200, percentage: 80 },
+      timestamp(4, 15)
+    ),
+    "overdue"
+  )
+  assert.equal(
+    getGoalStatus(
+      { ...goal, status: "archived" },
+      { currentAmount: 250, percentage: 100 },
+      timestamp(4, 15)
+    ),
+    "archived"
   )
 })

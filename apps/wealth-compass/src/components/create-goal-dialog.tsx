@@ -23,28 +23,33 @@ import {
 import { toast } from "sonner"
 import { JAR_FULL_NAMES } from "../../convex/constants"
 import type { CurrencyCode } from "@wealth-compass/lib/currency"
-import type { Id } from "../../convex/_generated/dataModel"
 
-const GOAL_TYPE_LABELS: Record<string, string> = {
+type GoalType = "jar" | "netWorth"
+
+const GOAL_TYPE_LABELS: Record<GoalType, string> = {
   netWorth: "Net Worth Target",
   jar: "Jar Savings Target",
 }
 
 interface CreateGoalDialogProps {
   currency: CurrencyCode
-  children: React.ReactNode
+  children: ReactElement
 }
 
-export function CreateGoalDialog({ currency: _currency, children }: CreateGoalDialogProps) {
+export function CreateGoalDialog({
+  currency: _currency,
+  children,
+}: CreateGoalDialogProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
-  const [type, setType] = useState<"jar" | "netWorth">("netWorth")
+  const [type, setType] = useState<GoalType>("netWorth")
   const [jarId, setJarId] = useState<string>("")
   const [targetAmount, setTargetAmount] = useState("")
   const [deadline, setDeadline] = useState("")
   const [loading, setLoading] = useState(false)
   const jars = useQuery(api.jars.getUserJars)
   const createGoal = useMutation(api.goals.createGoal)
+  const selectedJar = jars?.find((jar) => jar._id === jarId)
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -66,7 +71,7 @@ export function CreateGoalDialog({ currency: _currency, children }: CreateGoalDi
         name: name.trim(),
         type,
         targetAmount: parseFloat(targetAmount),
-        jarId: type === "jar" ? (jarId as Id<"jars">) : undefined,
+        jarId: type === "jar" ? selectedJar?._id : undefined,
         deadline: deadline ? new Date(deadline).getTime() : undefined,
       })
       toast.success("Goal created!")
@@ -90,7 +95,7 @@ export function CreateGoalDialog({ currency: _currency, children }: CreateGoalDi
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={children as ReactElement} />
+      <DialogTrigger render={children} />
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Create Goal</DialogTitle>
@@ -113,7 +118,9 @@ export function CreateGoalDialog({ currency: _currency, children }: CreateGoalDi
             <Label>Goal Type</Label>
             <Select
               value={type}
-              onValueChange={(v) => setType(v as "jar" | "netWorth")}
+              onValueChange={(value) =>
+                setType(value === "jar" ? "jar" : "netWorth")
+              }
             >
               <SelectTrigger className="w-full">
                 <SelectValue>
@@ -133,7 +140,11 @@ export function CreateGoalDialog({ currency: _currency, children }: CreateGoalDi
               <Select value={jarId} onValueChange={(v) => setJarId(v ?? "")}>
                 <SelectTrigger className="w-full">
                   <SelectValue>
-                    {jarId ? (JAR_FULL_NAMES[jars?.find((j) => j._id === jarId)?.name ?? ""] ?? "Select jar") : "Choose a jar"}
+                    {jarId
+                      ? (JAR_FULL_NAMES[
+                          jars?.find((j) => j._id === jarId)?.name ?? ""
+                        ] ?? "Select jar")
+                      : "Choose a jar"}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>

@@ -37,14 +37,16 @@ export default defineSchema({
     note: v.optional(v.string()),
     categoryId: v.optional(v.id("categories")),
     createdAt: v.number(),
-  }).index("by_userId", ["userId"])
+  })
+    .index("by_userId", ["userId"])
     .index("by_userId_createdAt", ["userId", "createdAt"]),
 
   categories: defineTable({
     userId: v.id("users"),
     jarName: v.string(),
     name: v.string(),
-  }).index("by_userId", ["userId"])
+  })
+    .index("by_userId", ["userId"])
     .index("by_userId_jarName", ["userId", "jarName"]),
 
   recurringIncomes: defineTable({
@@ -57,7 +59,8 @@ export default defineSchema({
     ),
     nextOccurrence: v.number(),
     active: v.boolean(),
-  }).index("by_userId", ["userId"])
+  })
+    .index("by_userId", ["userId"])
     .index("by_nextOccurrence", ["nextOccurrence"]),
 
   goals: defineTable({
@@ -68,7 +71,28 @@ export default defineSchema({
     jarId: v.optional(v.id("jars")),
     deadline: v.optional(v.number()),
     deadlineReminderId: v.optional(v.id("_scheduled_functions")),
+    status: v.optional(
+      v.union(
+        v.literal("active"),
+        v.literal("completed"),
+        v.literal("archived")
+      )
+    ),
+    completedAt: v.optional(v.number()),
+    archivedAt: v.optional(v.number()),
   }).index("by_userId", ["userId"]),
+
+  goalMilestones: defineTable({
+    userId: v.id("users"),
+    goalId: v.id("goals"),
+    name: v.string(),
+    targetAmount: v.number(),
+    completedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_goalId", ["goalId"])
+    .index("by_userId", ["userId"])
+    .index("by_userId_goalId", ["userId", "goalId"]),
 
   pushSubscriptions: defineTable({
     userId: v.id("users"),
@@ -91,11 +115,7 @@ export default defineSchema({
     spendingLimitThreshold: v.number(),
     goalDeadlineDays: v.number(),
     incomeAllocationFrequency: v.optional(
-      v.union(
-        v.literal("daily"),
-        v.literal("weekly"),
-        v.literal("custom")
-      )
+      v.union(v.literal("daily"), v.literal("weekly"), v.literal("custom"))
     ),
     incomeAllocationCustomDay: v.optional(v.number()),
     quietHoursEnabled: v.optional(v.boolean()),

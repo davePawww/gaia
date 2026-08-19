@@ -1,13 +1,23 @@
 import { useMutation, useQuery } from "convex/react"
 import { api } from "../../convex/_generated/api"
-import { Card, CardContent, CardHeader, CardTitle } from "@gaia/ui/components/card"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@gaia/ui/components/card"
 import { Button } from "@gaia/ui/components/button"
 import { Badge } from "@gaia/ui/components/badge"
 import { Progress } from "@gaia/ui/components/progress"
-import { Trash2, Target, Wallet } from "lucide-react"
+import { Pencil, Trash2, Target, Wallet } from "lucide-react"
 import { toast } from "sonner"
 import { formatCurrency, type CurrencyCode } from "@wealth-compass/lib/currency"
+import {
+  getGoalStatus,
+  type DashboardGoal,
+} from "@wealth-compass/lib/dashboard-data"
 import type { Id } from "../../convex/_generated/dataModel"
+import { GoalDetailDialog } from "@wealth-compass/components/goal-detail-dialog"
 
 interface GoalCardProps {
   goal: {
@@ -17,6 +27,9 @@ interface GoalCardProps {
     targetAmount: number
     jarId?: Id<"jars">
     deadline?: number
+    status?: "active" | "completed" | "archived"
+    completedAt?: number
+    archivedAt?: number
   }
   currency: CurrencyCode
 }
@@ -37,17 +50,33 @@ export function GoalCard({ goal, currency }: GoalCardProps) {
       ? Math.min((currentAmount / goal.targetAmount) * 100, 100)
       : 0
 
+  const status = getGoalStatus(
+    {
+      id: goal._id,
+      name: goal.name,
+      type: goal.type,
+      targetAmount: goal.targetAmount,
+      jarId: goal.jarId,
+      deadline: goal.deadline,
+      status: goal.status,
+      completedAt: goal.completedAt,
+      archivedAt: goal.archivedAt,
+    } satisfies DashboardGoal,
+    { currentAmount, percentage: progress }
+  )
+
   const jarName =
     goal.type === "jar"
       ? jarBalances?.find((jb) => jb.jar._id === goal.jarId)?.jar.name
       : null
 
-  const daysRemaining = goal.deadline
-    ? Math.max(
-        0,
-        Math.ceil((goal.deadline - Date.now()) / (1000 * 60 * 60 * 24)),
-      )
-    : null
+  const daysRemaining =
+    goal.deadline && status !== "archived"
+      ? Math.max(
+          0,
+          Math.ceil((goal.deadline - Date.now()) / (1000 * 60 * 60 * 24))
+        )
+      : null
 
   const handleDelete = async () => {
     try {
@@ -67,16 +96,43 @@ export function GoalCard({ goal, currency }: GoalCardProps) {
           ) : (
             <Target className="h-4 w-4 text-muted-foreground" />
           )}
-          <CardTitle className="text-sm font-medium">{goal.name}</CardTitle>
+          <div>
+            <CardTitle className="text-sm font-medium">{goal.name}</CardTitle>
+            <Badge
+              variant={
+                status === "overdue"
+                  ? "destructive"
+                  : status === "archived"
+                    ? "outline"
+                    : status === "completed"
+                      ? "default"
+                      : "secondary"
+              }
+              className="mt-1 capitalize"
+            >
+              {status}
+            </Badge>
+          </div>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleDelete}
-          aria-label={`Delete ${goal.name}`}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <GoalDetailDialog goal={goal} currency={currency}>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={`Edit ${goal.name}`}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          </GoalDetailDialog>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={handleDelete}
+            aria-label={`Delete ${goal.name}`}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex items-baseline justify-between">
@@ -93,8 +149,16 @@ export function GoalCard({ goal, currency }: GoalCardProps) {
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{Math.round(progress)}% complete</span>
           {daysRemaining !== null && (
-            <Badge variant={daysRemaining < 30 ? "destructive" : "secondary"}>
-              {daysRemaining} days left
+            <Badge
+              variant={
+                status === "overdue" || daysRemaining < 30
+                  ? "destructive"
+                  : "secondary"
+              }
+            >
+              {status === "overdue"
+                ? `${daysRemaining} days overdue`
+                : `${daysRemaining} days left`}
             </Badge>
           )}
         </div>

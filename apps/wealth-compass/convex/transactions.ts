@@ -3,7 +3,7 @@ import { v } from "convex/values"
 import { getAuthUserId } from "@convex-dev/auth/server"
 import { JAR_FULL_NAMES } from "./constants"
 import { internal } from "./_generated/api"
-import { calculateJarBalances, sumBalances } from "./finance"
+import { calculateJarBalances, shouldMarkGoalComplete } from "./finance"
 import type { GenericMutationCtx } from "convex/server"
 import type { DataModel, Id } from "./_generated/dataModel"
 
@@ -146,6 +146,8 @@ export const withdraw = mutation({
       createdAt: Date.now(),
     })
 
+    await checkGoalCompletions(ctx, userId)
+
     return { success: true }
   },
 })
@@ -199,6 +201,8 @@ export const transfer = mutation({
       categoryId: args.categoryId,
       createdAt: Date.now(),
     })
+
+    await checkGoalCompletions(ctx, userId)
 
     return { success: true }
   },
@@ -268,64 +272,88 @@ async function checkGoalCompletions(ctx: MutationCtx, userId: Id<"users">) {
   const goals = await ctx.db
     .query("goals")
     .withIndex("by_userId", (q) => q.eq("userId", userId))
-    .collect()
-
-  const prefs = await ctx.db
-    .query("notificationPreferences")
-    .withIndex("by_userId", (q) => q.eq("userId", userId))
-    .unique()
-
-  if (!prefs?.goalCompleted) return
+    .take(100)
 
   const jars = await ctx.db
     .query("jars")
     .withIndex("by_userId", (q) => q.eq("userId", userId))
-    .collect()
+    .take(20)
 
   const transactions = await ctx.db
     .query("transactions")
     .withIndex("by_userId", (q) => q.eq("userId", userId))
-    .collect()
+    .take(1000)
 
   const jarBalances = calculateJarBalances(
     jars.map((jar) => jar._id),
     transactions
   )
-  const netWorth = sumBalances(jarBalances)
+  const now = Date.now()
+  const completedGoalIds = new Set<Id<"goals">>()
+  for (const goal of goals) {
+    if (goal.status === "archived" || goal.status === "completed") continue
+
+    if (shouldMarkGoalComplete(goal, jarBalances)) {
+      completedGoalIds.add(goal._id)
+      await ctx.db.patch(goal._id, {
+        status: "completed",
+        completedAt: now,
+      })
+    }
+  }
+
+  const milestones = await ctx.db
+    .query("goalMilestones")
+    .withIndex("by_userId", (q) => q.eq("userId", userId))
+    .take(500)
+  for (const milestone of milestones) {
+    if (milestone.completedAt) continue
+    const goal = goals.find((candidate) => candidate._id === milestone.goalId)
+    if (!goal || goal.status === "archived") continue
+    const milestoneGoal = {
+      type: goal.type,
+      targetAmount: milestone.targetAmount,
+      jarId: goal.jarId,
+      status: goal.status,
+    }
+    if (shouldMarkGoalComplete(milestoneGoal, jarBalances)) {
+      await ctx.db.patch(milestone._id, { completedAt: now })
+    }
+  }
+
+  if (completedGoalIds.size === 0) return
+
+  const prefs = await ctx.db
+    .query("notificationPreferences")
+    .withIndex("by_userId", (q) => q.eq("userId", userId))
+    .unique()
+  if (!prefs?.goalCompleted) return
 
   const existingNotifications = await ctx.db
     .query("notifications")
     .withIndex("by_userId", (q) => q.eq("userId", userId))
-    .collect()
+    .take(500)
 
   for (const goal of goals) {
-    const currentValue =
-      goal.type === "netWorth"
-        ? netWorth
-        : goal.jarId
-          ? (jarBalances[goal.jarId] ?? 0)
-          : 0
-
-    if (currentValue >= goal.targetAmount) {
-      const alreadyNotified = existingNotifications.some(
-        (n) => n.type === "goal_completed" && n.goalId === goal._id
+    if (!completedGoalIds.has(goal._id)) continue
+    const alreadyNotified = existingNotifications.some(
+      (n) => n.type === "goal_completed" && n.goalId === goal._id
+    )
+    if (!alreadyNotified) {
+      const notificationId = await ctx.db.insert("notifications", {
+        userId,
+        type: "goal_completed",
+        title: "Goal Completed!",
+        body: `You've reached your goal "${goal.name}"!`,
+        goalId: goal._id,
+        read: false,
+        createdAt: now,
+      })
+      await ctx.scheduler.runAfter(
+        0,
+        internal.actions.sendPush.sendNotificationPush,
+        { notificationId }
       )
-      if (!alreadyNotified) {
-        const notificationId = await ctx.db.insert("notifications", {
-          userId,
-          type: "goal_completed",
-          title: "Goal Completed!",
-          body: `You've reached your goal "${goal.name}"!`,
-          goalId: goal._id,
-          read: false,
-          createdAt: Date.now(),
-        })
-        await ctx.scheduler.runAfter(
-          0,
-          internal.actions.sendPush.sendNotificationPush,
-          { notificationId }
-        )
-      }
     }
   }
 }

@@ -40,6 +40,9 @@ export interface DashboardGoal {
   targetAmount: number
   jarId?: string
   deadline?: number
+  status?: "active" | "completed" | "archived"
+  completedAt?: number
+  archivedAt?: number
 }
 
 export interface DashboardJarBalance {
@@ -48,6 +51,14 @@ export interface DashboardJarBalance {
 }
 
 export interface GoalProgress {
+  currentAmount: number
+  percentage: number
+}
+
+export type GoalStatus = "active" | "completed" | "overdue" | "archived"
+
+export interface GoalProgressHistoryPoint {
+  month: string
   currentAmount: number
   percentage: number
 }
@@ -212,6 +223,56 @@ export function getGoalProgress(
         ? Math.min((currentAmount / goal.targetAmount) * 100, 100)
         : 0,
   }
+}
+
+export function getGoalStatus(
+  goal: DashboardGoal,
+  progress: GoalProgress,
+  now: number = Date.now()
+): GoalStatus {
+  if (goal.status === "archived") return "archived"
+  if (
+    goal.status === "completed" ||
+    progress.currentAmount >= goal.targetAmount
+  ) {
+    return "completed"
+  }
+  if (goal.deadline !== undefined && goal.deadline < now) return "overdue"
+  return "active"
+}
+
+export function buildGoalProgressHistory(
+  goal: DashboardGoal,
+  transactions: readonly DashboardTransaction[],
+  jars: readonly DashboardJar[],
+  now: number = Date.now(),
+  monthCount = 6
+): GoalProgressHistoryPoint[] {
+  const monthlyData = buildDashboardMonthlyData(
+    transactions,
+    jars,
+    now,
+    monthCount
+  )
+  const months = [...new Set(monthlyData.balances.map((point) => point.month))]
+
+  return months.map((month) => {
+    const balances = monthlyData.balances.filter(
+      (point) => point.month === month
+    )
+    const currentAmount =
+      goal.type === "netWorth"
+        ? balances.reduce((sum, point) => sum + point.balance, 0)
+        : (balances.find((point) => point.jarId === goal.jarId)?.balance ?? 0)
+    return {
+      month,
+      currentAmount,
+      percentage:
+        goal.targetAmount > 0
+          ? Math.min((currentAmount / goal.targetAmount) * 100, 100)
+          : 0,
+    }
+  })
 }
 
 // Keep this export local to the dashboard data module so callers do not need
