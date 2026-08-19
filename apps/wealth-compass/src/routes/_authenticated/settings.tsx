@@ -17,6 +17,7 @@ import { toast } from "sonner"
 import { useTheme } from "@gaia/ui/lib/theme-provider"
 import { useCurrency } from "@wealth-compass/lib/use-currency"
 import { CurrencySelector } from "@wealth-compass/components/currency-selector"
+import { SourceCurrencySelector } from "@wealth-compass/components/source-currency-selector"
 import {
   PERSONALITY_PRESETS,
   DEFAULT_JARS,
@@ -196,9 +197,11 @@ function SettingsPage() {
               </div>
               <Separator />
               <div className="space-y-2">
-                <Label>Currency</Label>
+                <Label>Display currency</Label>
                 <CurrencySelector />
               </div>
+              <Separator />
+              <SourceCurrencySelector />
             </CardContent>
           </Card>
 

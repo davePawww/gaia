@@ -19,7 +19,7 @@ import {
   Trash2,
 } from "lucide-react"
 import { useCurrency } from "@wealth-compass/lib/use-currency"
-import { formatCurrency } from "@wealth-compass/lib/currency"
+import { formatCurrency, isCurrencyCode } from "@wealth-compass/lib/currency"
 import { AllocateIncomeDialog } from "@wealth-compass/components/allocate-income-dialog"
 import { WithdrawDialog } from "@wealth-compass/components/withdraw-dialog"
 import { TransferDialog } from "@wealth-compass/components/transfer-dialog"
@@ -295,6 +295,20 @@ function TransactionsPage() {
             <div className="space-y-4">
               {paginatedTransactions.items.map((t) => {
                 const categoryName = getCategoryName(t.categoryId)
+                const sourceCurrency =
+                  t.sourceCurrency && isCurrencyCode(t.sourceCurrency)
+                    ? t.sourceCurrency
+                    : null
+                const convertedCurrency =
+                  t.convertedCurrency && isCurrencyCode(t.convertedCurrency)
+                    ? t.convertedCurrency
+                    : currency
+                const hasConversion =
+                  t.type === "income" &&
+                  sourceCurrency !== null &&
+                  sourceCurrency !== convertedCurrency &&
+                  t.originalAmount !== undefined &&
+                  t.exchangeRate !== undefined
                 return (
                   <div
                     key={t._id}
@@ -342,6 +356,19 @@ function TransactionsPage() {
                       <p className="text-xs text-muted-foreground">
                         {formatDate(t.createdAt)}
                       </p>
+                      {hasConversion && sourceCurrency && (
+                        <p className="text-xs text-muted-foreground">
+                          {formatCurrency(
+                            t.originalAmount ?? 0,
+                            sourceCurrency
+                          )}
+                          {" → "}
+                          {formatCurrency(t.amount, convertedCurrency)} at 1{" "}
+                          {sourceCurrency} = {t.exchangeRate?.toLocaleString()}{" "}
+                          {convertedCurrency}
+                          {t.exchangeRateDate ? ` (${t.exchangeRateDate})` : ""}
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <span
@@ -354,7 +381,7 @@ function TransactionsPage() {
                         }`}
                       >
                         {t.type === "income" ? "+" : "-"}
-                        {formatCurrency(t.amount, currency)}
+                        {formatCurrency(t.amount, convertedCurrency)}
                       </span>
                       <Button
                         variant="ghost"

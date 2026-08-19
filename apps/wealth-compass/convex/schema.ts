@@ -36,6 +36,12 @@ export default defineSchema({
     toJarId: v.optional(v.id("jars")),
     note: v.optional(v.string()),
     categoryId: v.optional(v.id("categories")),
+    originalAmount: v.optional(v.number()),
+    sourceCurrency: v.optional(v.string()),
+    convertedCurrency: v.optional(v.string()),
+    exchangeRate: v.optional(v.number()),
+    exchangeRateDate: v.optional(v.string()),
+    exchangeRateFetchedAt: v.optional(v.number()),
     createdAt: v.number(),
   })
     .index("by_userId", ["userId"])
@@ -68,6 +74,18 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_nextOccurrence", ["nextOccurrence"])
     .index("by_active_nextOccurrence", ["active", "nextOccurrence"]),
+
+  exchangeRates: defineTable({
+    sourceCurrency: v.string(),
+    targetCurrency: v.string(),
+    rate: v.number(),
+    rateDate: v.string(),
+    fetchedAt: v.number(),
+    provider: v.string(),
+  }).index("by_sourceCurrency_targetCurrency", [
+    "sourceCurrency",
+    "targetCurrency",
+  ]),
 
   goals: defineTable({
     userId: v.id("users"),

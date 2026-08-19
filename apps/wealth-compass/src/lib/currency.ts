@@ -11,17 +11,38 @@ export const CURRENCIES = [
 export type CurrencyCode = (typeof CURRENCIES)[number]["code"]
 
 const STORAGE_KEY = "wealth-compass-currency"
+const SOURCE_STORAGE_KEY = "wealth-compass-source-currency"
+
+export function isCurrencyCode(value: string): value is CurrencyCode {
+  return CURRENCIES.some((currency) => currency.code === value)
+}
 
 export function getStoredCurrency(): CurrencyCode {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored && CURRENCIES.some((c) => c.code === stored)) {
-      return stored as CurrencyCode
-    }
+    if (stored && isCurrencyCode(stored)) return stored
   } catch {
     // localStorage unavailable
   }
   return "USD"
+}
+
+export function getStoredSourceCurrency(): CurrencyCode {
+  try {
+    const stored = localStorage.getItem(SOURCE_STORAGE_KEY)
+    if (stored && isCurrencyCode(stored)) return stored
+  } catch {
+    // localStorage unavailable
+  }
+  return getStoredCurrency()
+}
+
+export function setStoredSourceCurrency(code: CurrencyCode): void {
+  try {
+    localStorage.setItem(SOURCE_STORAGE_KEY, code)
+  } catch {
+    // localStorage unavailable
+  }
 }
 
 export function setStoredCurrency(code: CurrencyCode): void {

@@ -7,7 +7,7 @@ import {
 } from "@gaia/ui/components/dropdown-menu"
 import { ChevronDown } from "lucide-react"
 import { useCurrency } from "../lib/use-currency"
-import { CURRENCIES, type CurrencyCode } from "../lib/currency"
+import { CURRENCIES } from "../lib/currency"
 
 export function CurrencySelector() {
   const { currency, setCurrency } = useCurrency()
@@ -15,16 +15,17 @@ export function CurrencySelector() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="outline" size="sm" aria-label="Select currency" />}>
+      <DropdownMenuTrigger
+        render={
+          <Button variant="outline" size="sm" aria-label="Select currency" />
+        }
+      >
         {current?.symbol} {current?.code}
         <ChevronDown className="ml-1 h-3 w-3" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {CURRENCIES.map((c) => (
-          <DropdownMenuItem
-            key={c.code}
-            onClick={() => setCurrency(c.code as CurrencyCode)}
-          >
+          <DropdownMenuItem key={c.code} onClick={() => setCurrency(c.code)}>
             <span className="mr-2">{c.symbol}</span>
             {c.code} - {c.label}
           </DropdownMenuItem>

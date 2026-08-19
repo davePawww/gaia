@@ -17,6 +17,7 @@ import type * as cronJobs from "../cronJobs.js";
 import type * as crons from "../crons.js";
 import type * as email from "../email.js";
 import type * as emailContent from "../emailContent.js";
+import type * as exchangeRates from "../exchangeRates.js";
 import type * as finance from "../finance.js";
 import type * as goals from "../goals.js";
 import type * as http from "../http.js";
@@ -44,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   email: typeof email;
   emailContent: typeof emailContent;
+  exchangeRates: typeof exchangeRates;
   finance: typeof finance;
   goals: typeof goals;
   http: typeof http;

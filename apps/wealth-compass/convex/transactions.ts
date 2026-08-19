@@ -9,21 +9,66 @@ import type { DataModel, Id } from "./_generated/dataModel"
 
 type MutationCtx = GenericMutationCtx<DataModel>
 
+const SUPPORTED_CURRENCIES = new Set([
+  "USD",
+  "EUR",
+  "GBP",
+  "JPY",
+  "CAD",
+  "AUD",
+  "PHP",
+])
+
 export const allocateIncome = mutation({
   args: {
     amount: v.number(),
     overrides: v.optional(v.record(v.string(), v.number())),
+    sourceCurrency: v.optional(v.string()),
+    targetCurrency: v.optional(v.string()),
+    rateId: v.optional(v.id("exchangeRates")),
   },
+  returns: v.object({
+    success: v.boolean(),
+    convertedAmount: v.number(),
+    exchangeRate: v.number(),
+  }),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
     if (!userId) throw new Error("Not authenticated")
 
     if (args.amount <= 0) throw new Error("Amount must be positive")
 
+    const sourceCurrency = args.sourceCurrency ?? args.targetCurrency ?? "USD"
+    const targetCurrency = args.targetCurrency ?? sourceCurrency
+    if (
+      !SUPPORTED_CURRENCIES.has(sourceCurrency) ||
+      !SUPPORTED_CURRENCIES.has(targetCurrency)
+    ) {
+      throw new Error("Unsupported currency")
+    }
+    let exchangeRate = 1
+    let exchangeRateDate: string | undefined
+    let exchangeRateFetchedAt: number | undefined
+    if (sourceCurrency !== targetCurrency) {
+      if (!args.rateId) throw new Error("Exchange rate is required")
+      const rate = await ctx.db.get(args.rateId)
+      if (
+        !rate ||
+        rate.sourceCurrency !== sourceCurrency ||
+        rate.targetCurrency !== targetCurrency
+      ) {
+        throw new Error("Exchange rate does not match the selected currencies")
+      }
+      exchangeRate = rate.rate
+      exchangeRateDate = rate.rateDate
+      exchangeRateFetchedAt = rate.fetchedAt
+    }
+    const convertedAmount = args.amount * exchangeRate
+
     const jars = await ctx.db
       .query("jars")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .collect()
+      .take(20)
 
     if (jars.length === 0) throw new Error("No jars found")
 
@@ -62,12 +107,19 @@ export const allocateIncome = mutation({
 
     for (const jar of jars) {
       const percentage = args.overrides?.[jar.name] ?? jar.percentage
-      const amount = (args.amount * percentage) / 100
+      const amount = (convertedAmount * percentage) / 100
+      const originalAmount = (args.amount * percentage) / 100
 
       await ctx.db.insert("transactions", {
         userId,
         type: "income",
         amount,
+        originalAmount,
+        sourceCurrency,
+        convertedCurrency: targetCurrency,
+        exchangeRate,
+        exchangeRateDate,
+        exchangeRateFetchedAt,
         toJarId: jar._id,
         createdAt: now,
       })
@@ -75,7 +127,7 @@ export const allocateIncome = mutation({
 
     await checkGoalCompletions(ctx, userId)
 
-    return { success: true }
+    return { success: true, convertedAmount, exchangeRate }
   },
 })
 
