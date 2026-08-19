@@ -45,6 +45,7 @@ import {
   getGoalProgress,
   getGoalStatus,
   type DashboardGoal,
+  type GoalStatus,
 } from "@wealth-compass/lib/dashboard-data"
 import { formatCurrency, type CurrencyCode } from "@wealth-compass/lib/currency"
 
@@ -108,6 +109,7 @@ export function GoalDetailDialog({
   const [milestoneName, setMilestoneName] = useState("")
   const [milestoneAmount, setMilestoneAmount] = useState("")
   const [saving, setSaving] = useState(false)
+  const [statusOverride, setStatusOverride] = useState<GoalStatus | null>(null)
 
   const jarBalances = useQuery(api.jars.getJarBalances)
   const jars = useQuery(api.jars.getUserJars)
@@ -128,6 +130,10 @@ export function GoalDetailDialog({
     setDeadline(toDateInputValue(goal.deadline))
   }, [goal, open])
 
+  useEffect(() => {
+    setStatusOverride(null)
+  }, [goal.status])
+
   const dashboardGoal = asDashboardGoal(goal)
   const progress = getGoalProgress(
     dashboardGoal,
@@ -136,7 +142,7 @@ export function GoalDetailDialog({
       balance: item.balance,
     })) ?? []
   )
-  const status = getGoalStatus(dashboardGoal, progress)
+  const status = statusOverride ?? getGoalStatus(dashboardGoal, progress)
   const history = useMemo(
     () =>
       transactions && jarBalances
@@ -188,9 +194,11 @@ export function GoalDetailDialog({
     try {
       if (status === "archived") {
         await restoreGoal({ goalId: goal._id })
+        setStatusOverride("active")
         toast.success("Goal restored")
       } else {
         await archiveGoal({ goalId: goal._id })
+        setStatusOverride("archived")
         toast.success("Goal archived")
       }
     } catch {
