@@ -59,12 +59,20 @@ export function AllocateIncomeDialog({
     preferredSourceCurrency
   )
   const [rate, setRate] = useState<ExchangeRateState | null>(null)
+  const [canonicalRate, setCanonicalRate] = useState<ExchangeRateState | null>(
+    null
+  )
   const [rateLoading, setRateLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const rateRequest = useRef(0)
   const jars = useQuery(api.jars.getUserJars)
   const getExchangeRate = useAction(api.exchangeRates.getExchangeRate)
+  const getExchangeRateRef = useRef(getExchangeRate)
   const allocateIncome = useMutation(api.transactions.allocateIncome)
+
+  useEffect(() => {
+    getExchangeRateRef.current = getExchangeRate
+  }, [getExchangeRate])
 
   const refreshRate = useCallback(
     async (forceRefresh = false) => {
@@ -72,15 +80,31 @@ export function AllocateIncomeDialog({
       rateRequest.current = requestNumber
       setRateLoading(true)
       try {
-        const nextRate = await getExchangeRate({
+        const displayRatePromise = getExchangeRateRef.current({
           sourceCurrency: selectedSource,
           targetCurrency: currency,
           forceRefresh,
         })
-        if (rateRequest.current === requestNumber) setRate(nextRate)
+        const canonicalRatePromise =
+          currency === "USD"
+            ? displayRatePromise
+            : getExchangeRateRef.current({
+                sourceCurrency: selectedSource,
+                targetCurrency: "USD",
+                forceRefresh,
+              })
+        const [nextRate, nextCanonicalRate] = await Promise.all([
+          displayRatePromise,
+          canonicalRatePromise,
+        ])
+        if (rateRequest.current === requestNumber) {
+          setRate(nextRate)
+          setCanonicalRate(nextCanonicalRate)
+        }
       } catch (error) {
         if (rateRequest.current === requestNumber) {
           setRate(null)
+          setCanonicalRate(null)
           toast.error(
             error instanceof Error
               ? error.message
@@ -91,7 +115,7 @@ export function AllocateIncomeDialog({
         if (rateRequest.current === requestNumber) setRateLoading(false)
       }
     },
-    [currency, getExchangeRate, selectedSource]
+    [currency, selectedSource]
   )
 
   useEffect(() => {
@@ -103,6 +127,7 @@ export function AllocateIncomeDialog({
     if (nextOpen) {
       setSelectedSource(preferredSourceCurrency)
       setRate(null)
+      setCanonicalRate(null)
     }
     setOpen(nextOpen)
   }
@@ -120,23 +145,23 @@ export function AllocateIncomeDialog({
       toast.error("Please enter a valid amount")
       return
     }
-    if (!rate) {
+    if (!rate || !canonicalRate) {
       toast.error("Wait for an exchange rate before allocating income")
       return
     }
 
     setSubmitting(true)
     try {
-      const result = await allocateIncome({
+      await allocateIncome({
         amount: originalAmount,
         sourceCurrency: selectedSource,
-        targetCurrency: currency,
-        rateId: rate.rateId ?? undefined,
+        targetCurrency: "USD",
+        rateId: canonicalRate.rateId ?? undefined,
       })
       toast.success(
         selectedSource === currency
-          ? `Allocated ${formatCurrency(result.convertedAmount, currency)} across ${jars?.length ?? 0} jars`
-          : `Converted ${formatCurrency(originalAmount, selectedSource)} to ${formatCurrency(result.convertedAmount, currency)} and allocated it`
+          ? `Allocated ${formatCurrency(convertedAmount, currency)} across ${jars?.length ?? 0} jars`
+          : `Converted ${formatCurrency(originalAmount, selectedSource)} to ${formatCurrency(convertedAmount, currency)} and allocated it`
       )
       setOpen(false)
       setAmount("")
@@ -273,7 +298,13 @@ export function AllocateIncomeDialog({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={submitting || rateLoading || originalAmount <= 0 || !rate}
+            disabled={
+              submitting ||
+              rateLoading ||
+              originalAmount <= 0 ||
+              !rate ||
+              !canonicalRate
+            }
           >
             {submitting ? "Allocating…" : "Allocate"}
           </Button>

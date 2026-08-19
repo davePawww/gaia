@@ -8,16 +8,22 @@ import {
 import { ChevronDown } from "lucide-react"
 import { useCurrency } from "../lib/use-currency"
 import { CURRENCIES } from "../lib/currency"
+import { toast } from "sonner"
 
 export function CurrencySelector() {
-  const { currency, setCurrency } = useCurrency()
+  const { currency, setCurrency, isChangingCurrency } = useCurrency()
   const current = CURRENCIES.find((c) => c.code === currency)
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button variant="outline" size="sm" aria-label="Select currency" />
+          <Button
+            variant="outline"
+            size="sm"
+            aria-label="Select currency"
+            disabled={isChangingCurrency}
+          />
         }
       >
         {current?.symbol} {current?.code}
@@ -25,7 +31,14 @@ export function CurrencySelector() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {CURRENCIES.map((c) => (
-          <DropdownMenuItem key={c.code} onClick={() => setCurrency(c.code)}>
+          <DropdownMenuItem
+            key={c.code}
+            onClick={() => {
+              void setCurrency(c.code).catch(() => {
+                toast.error("Unable to load that currency's exchange rate")
+              })
+            }}
+          >
             <span className="mr-2">{c.symbol}</span>
             {c.code} - {c.label}
           </DropdownMenuItem>

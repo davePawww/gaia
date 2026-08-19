@@ -1,4 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@gaia/ui/components/card"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@gaia/ui/components/card"
 import { Badge } from "@gaia/ui/components/badge"
 import {
   Progress,
@@ -15,7 +20,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import type { Doc } from "../../convex/_generated/dataModel"
-import { formatCurrency, type CurrencyCode } from "@wealth-compass/lib/currency"
+import { useCurrency } from "@wealth-compass/lib/use-currency"
 
 const iconMap: Record<string, LucideIcon> = {
   Home,
@@ -30,10 +35,10 @@ interface JarCardProps {
   jar: Doc<"jars">
   balance: number
   recentIncome: number
-  currency: CurrencyCode
 }
 
-export function JarCard({ jar, balance, recentIncome, currency }: JarCardProps) {
+export function JarCard({ jar, balance, recentIncome }: JarCardProps) {
+  const { formatDisplayAmount } = useCurrency()
   const Icon = iconMap[jar.icon] ?? Home
   const fillPercentage =
     recentIncome > 0 ? Math.min((balance / recentIncome) * 100, 100) : 0
@@ -54,16 +59,14 @@ export function JarCard({ jar, balance, recentIncome, currency }: JarCardProps) 
         </Badge>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">
-          {formatCurrency(balance, currency)}
-        </div>
+        <div className="text-2xl font-bold">{formatDisplayAmount(balance)}</div>
         <Progress value={fillPercentage} className="mt-3">
           <ProgressLabel className="sr-only">{jar.name} progress</ProgressLabel>
           <ProgressValue />
         </Progress>
         <p className="mt-1 text-xs text-muted-foreground">
-          {formatCurrency(balance, currency)} of{" "}
-          {formatCurrency(recentIncome, currency)} allocated
+          {formatDisplayAmount(balance)} of {formatDisplayAmount(recentIncome)}{" "}
+          allocated
         </p>
       </CardContent>
     </Card>

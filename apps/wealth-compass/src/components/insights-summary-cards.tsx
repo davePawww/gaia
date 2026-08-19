@@ -7,7 +7,6 @@ import {
 import { Skeleton } from "@gaia/ui/components/skeleton"
 import { TrendingUp, TrendingDown, DollarSign, Clock } from "lucide-react"
 import { useCurrency } from "@wealth-compass/lib/use-currency"
-import { formatCurrency } from "@wealth-compass/lib/currency"
 
 interface SummaryStats {
   totalSpending: number
@@ -24,7 +23,7 @@ export function InsightsSummaryCards({
   stats: SummaryStats | undefined
   isLoading: boolean
 }) {
-  const { currency } = useCurrency()
+  const { formatDisplayAmount } = useCurrency()
 
   if (isLoading || stats === undefined) {
     return (
@@ -56,7 +55,7 @@ export function InsightsSummaryCards({
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {formatCurrency(stats.totalSpending, currency)}
+            {formatDisplayAmount(stats.totalSpending)}
           </div>
           <p className="text-xs text-muted-foreground">Last 30 days</p>
         </CardContent>
@@ -69,7 +68,7 @@ export function InsightsSummaryCards({
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {formatCurrency(stats.avgDaily, currency)}
+            {formatDisplayAmount(stats.avgDaily)}
           </div>
           <p className="text-xs text-muted-foreground">Per day</p>
         </CardContent>
@@ -93,7 +92,7 @@ export function InsightsSummaryCards({
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
-                {formatCurrency(stats.mostSpentJar.total, currency)}
+                {formatDisplayAmount(stats.mostSpentJar.total)}
               </p>
             </>
           ) : (

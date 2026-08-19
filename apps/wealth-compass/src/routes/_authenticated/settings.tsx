@@ -15,7 +15,6 @@ import { Separator } from "@gaia/ui/components/separator"
 import { Skeleton } from "@gaia/ui/components/skeleton"
 import { toast } from "sonner"
 import { useTheme } from "@gaia/ui/lib/theme-provider"
-import { useCurrency } from "@wealth-compass/lib/use-currency"
 import { CurrencySelector } from "@wealth-compass/components/currency-selector"
 import { SourceCurrencySelector } from "@wealth-compass/components/source-currency-selector"
 import {
@@ -31,7 +30,6 @@ import type { Id } from "../../../convex/_generated/dataModel"
 
 function SettingsPage() {
   const { theme, setTheme } = useTheme()
-  const { currency } = useCurrency()
   const jars = useQuery(api.jars.getUserJars)
   const categories = useQuery(api.categories.getUserCategories)
   const updateJar = useMutation(api.jars.updateJar)
@@ -205,7 +203,7 @@ function SettingsPage() {
             </CardContent>
           </Card>
 
-          <RecurringIncomeSettings currency={currency} />
+          <RecurringIncomeSettings />
 
           <NotificationSettings />
         </>

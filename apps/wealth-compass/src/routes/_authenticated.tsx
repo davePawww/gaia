@@ -36,6 +36,7 @@ import {
 import { NotificationBell } from "../components/notification-bell"
 import { useQuery } from "convex/react"
 import { api } from "../../convex/_generated/api"
+import { CurrencyProvider } from "../lib/use-currency"
 
 const mainNav = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -72,95 +73,97 @@ function AuthenticatedLayout() {
   }
 
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader className="p-4">
-          <span className="font-logo text-lg font-black tracking-tighter">
-            WealthCompass
-          </span>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {mainNav.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton render={<Link to={item.url} />}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-          <SidebarGroup>
-            <SidebarGroupLabel>Submenu</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {secondaryNav.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton render={<Link to={item.url} />}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-        <SidebarFooter className="border-t border-sidebar-border p-4">
-          {convexUser ? (
-            <>
+    <CurrencyProvider>
+      <SidebarProvider>
+        <Sidebar>
+          <SidebarHeader className="p-4">
+            <span className="font-logo text-lg font-black tracking-tighter">
+              WealthCompass
+            </span>
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {mainNav.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton render={<Link to={item.url} />}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+            <SidebarGroup>
+              <SidebarGroupLabel>Submenu</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {secondaryNav.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton render={<Link to={item.url} />}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+          <SidebarFooter className="border-t border-sidebar-border p-4">
+            {convexUser ? (
+              <>
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage
+                      src={convexUser.image}
+                      alt={convexUser.name ?? "User"}
+                    />
+                    <AvatarFallback>{userInitial}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="truncate text-sm font-medium">
+                      {convexUser.name ?? "Account"}
+                    </span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      {convexUser.email ?? "user@example.com"}
+                    </span>
+                  </div>
+                </div>
+                <Button
+                  variant="secondary"
+                  className="mt-2 w-full justify-start py-4 text-muted-foreground hover:text-destructive"
+                  onClick={() => signOut()}
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign out</span>
+                </Button>
+              </>
+            ) : (
               <div className="flex items-center gap-3">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage
-                    src={convexUser.image}
-                    alt={convexUser.name ?? "User"}
-                  />
-                  <AvatarFallback>{userInitial}</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col overflow-hidden">
-                  <span className="truncate text-sm font-medium">
-                    {convexUser.name ?? "Account"}
-                  </span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {convexUser.email ?? "user@example.com"}
-                  </span>
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <div className="flex flex-col gap-1.5">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-32" />
                 </div>
               </div>
-              <Button
-                variant="secondary"
-                className="mt-2 w-full justify-start py-4 text-muted-foreground hover:text-destructive"
-                onClick={() => signOut()}
-              >
-                <LogOut className="h-4 w-4" />
-                <span>Sign out</span>
-              </Button>
-            </>
-          ) : (
-            <div className="flex items-center gap-3">
-              <Skeleton className="h-8 w-8 rounded-full" />
-              <div className="flex flex-col gap-1.5">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-3 w-32" />
-              </div>
+            )}
+          </SidebarFooter>
+        </Sidebar>
+        <main className="flex-1 p-6">
+          <header className="mb-6 flex items-center justify-between">
+            <SidebarTrigger />
+            <div className="flex items-center gap-4">
+              <NotificationBell />
             </div>
-          )}
-        </SidebarFooter>
-      </Sidebar>
-      <main className="flex-1 p-6">
-        <header className="mb-6 flex items-center justify-between">
-          <SidebarTrigger />
-          <div className="flex items-center gap-4">
-            <NotificationBell />
-          </div>
-        </header>
-        <Outlet />
-      </main>
-    </SidebarProvider>
+          </header>
+          <Outlet />
+        </main>
+      </SidebarProvider>
+    </CurrencyProvider>
   )
 }
 

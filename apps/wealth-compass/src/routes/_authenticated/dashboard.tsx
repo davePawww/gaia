@@ -31,10 +31,8 @@ import { AllocateIncomeDialog } from "@wealth-compass/components/allocate-income
 import { WithdrawDialog } from "@wealth-compass/components/withdraw-dialog"
 import { TransferDialog } from "@wealth-compass/components/transfer-dialog"
 import { useCurrency } from "@wealth-compass/lib/use-currency"
-import { formatCurrency, type CurrencyCode } from "@wealth-compass/lib/currency"
 import {
   buildDashboardMonthlyData,
-  type DashboardGoal,
   type DashboardJarBalance,
 } from "@wealth-compass/lib/dashboard-data"
 import {
@@ -52,7 +50,8 @@ const JAR_COLORS: Record<string, string> = {
   FFA: "#F59E0B",
 }
 
-function SpendingInsightsCard({ currency }: { currency: CurrencyCode }) {
+function SpendingInsightsCard() {
+  const { formatDisplayAmount } = useCurrency()
   const spendingByJar = useQuery(api.insights.getSpendingByJar, { days: 30 })
   const summaryStats = useQuery(api.insights.getSummaryStats, { days: 30 })
 
@@ -111,7 +110,7 @@ function SpendingInsightsCard({ currency }: { currency: CurrencyCode }) {
                   />
                   <span className="text-muted-foreground">{item.jarName}</span>
                   <span className="font-medium">
-                    {formatCurrency(item.total, currency)}
+                    {formatDisplayAmount(item.total)}
                   </span>
                 </div>
               ))}
@@ -119,7 +118,7 @@ function SpendingInsightsCard({ currency }: { currency: CurrencyCode }) {
             <div className="flex items-center justify-between border-t pt-3">
               <span className="text-sm text-muted-foreground">Total Spent</span>
               <span className="text-lg font-bold">
-                {formatCurrency(totalSpent, currency)}
+                {formatDisplayAmount(totalSpent)}
               </span>
             </div>
             <Link
@@ -136,7 +135,7 @@ function SpendingInsightsCard({ currency }: { currency: CurrencyCode }) {
 }
 
 function DashboardPage() {
-  const { currency } = useCurrency()
+  const { currency, formatDisplayAmount } = useCurrency()
   const jarBalances = useQuery(api.jars.getJarBalances)
   const transactions = useQuery(api.transactions.getUserTransactions)
   const goals = useQuery(api.goals.getUserGoals)
@@ -245,7 +244,7 @@ function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {formatCurrency(totalNetWorth, currency)}
+                {formatDisplayAmount(totalNetWorth)}
               </div>
               <p className="text-xs text-muted-foreground">
                 Across {jarBalances?.length ?? 0} jars
@@ -261,7 +260,7 @@ function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {formatCurrency(totalRecentIncome, currency)}
+                {formatDisplayAmount(totalRecentIncome)}
               </div>
               <p className="text-xs text-muted-foreground">Lifetime Income</p>
             </CardContent>
@@ -296,11 +295,10 @@ function DashboardPage() {
                     }
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {formatCurrency(
+                    {formatDisplayAmount(
                       jarBalances.reduce((max, jb) =>
                         jb.balance > max.balance ? jb : max
-                      ).balance,
-                      currency
+                      ).balance
                     )}
                   </p>
                 </>
@@ -312,7 +310,7 @@ function DashboardPage() {
         </div>
       )}
 
-      <SpendingInsightsCard currency={currency} />
+      <SpendingInsightsCard />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
@@ -351,18 +349,15 @@ function DashboardPage() {
       </div>
 
       <DashboardGoalsCard
-        goals={
-          goals?.map((goal) => ({
-            id: goal._id,
-            name: goal.name,
-            type: goal.type,
-            targetAmount: goal.targetAmount,
-            jarId: goal.jarId,
-            deadline: goal.deadline,
-          })) as DashboardGoal[] | undefined
-        }
+        goals={goals?.map((goal) => ({
+          id: goal._id,
+          name: goal.name,
+          type: goal.type,
+          targetAmount: goal.targetAmount,
+          jarId: goal.jarId,
+          deadline: goal.deadline,
+        }))}
         jarBalances={dashboardGoalBalances}
-        currency={currency}
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -386,7 +381,6 @@ function DashboardPage() {
                       jar={jb.jar}
                       balance={jb.balance}
                       recentIncome={totalRecentIncome}
-                      currency={currency}
                     />
                   ))}
                 </div>
@@ -418,7 +412,7 @@ function DashboardPage() {
                         <ChartTooltipContent
                           nameKey="name"
                           formatter={(value) =>
-                            formatCurrency(Number(value), currency)
+                            formatDisplayAmount(Number(value))
                           }
                         />
                       }
@@ -517,7 +511,7 @@ function DashboardPage() {
                         }
                       >
                         {t.type === "income" ? "+" : "-"}
-                        {formatCurrency(t.amount, currency)}
+                        {formatDisplayAmount(t.amount)}
                       </Badge>
                     </div>
                   ))}

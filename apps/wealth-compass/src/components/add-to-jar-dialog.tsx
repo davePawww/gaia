@@ -24,6 +24,7 @@ import {
 import { toast } from "sonner"
 import { formatCurrency, type CurrencyCode } from "@wealth-compass/lib/currency"
 import type { Id } from "../../convex/_generated/dataModel"
+import { useCurrency } from "@wealth-compass/lib/use-currency"
 
 interface AddToJarDialogProps {
   currency: CurrencyCode
@@ -31,6 +32,7 @@ interface AddToJarDialogProps {
 }
 
 export function AddToJarDialog({ currency, children }: AddToJarDialogProps) {
+  const { formatDisplayAmount, toCanonicalAmount } = useCurrency()
   const [open, setOpen] = useState(false)
   const [selectedJarId, setSelectedJarId] = useState<string>("")
   const [amount, setAmount] = useState("")
@@ -56,11 +58,11 @@ export function AddToJarDialog({ currency, children }: AddToJarDialogProps) {
     try {
       await addToJar({
         jarId: selectedJarId as Id<"jars">,
-        amount: totalAmount,
+        amount: toCanonicalAmount(totalAmount),
         note: note.trim() || undefined,
       })
       toast.success(
-        `Added ${formatCurrency(totalAmount, currency)} to ${selectedJar?.jar.name}`,
+        `Added ${formatCurrency(totalAmount, currency)} to ${selectedJar?.jar.name}`
       )
       setOpen(false)
       setSelectedJarId("")
@@ -87,11 +89,17 @@ export function AddToJarDialog({ currency, children }: AddToJarDialogProps) {
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Select Jar</Label>
-            <Select value={selectedJarId} onValueChange={(v) => setSelectedJarId(v ?? "")}>
+            <Select
+              value={selectedJarId}
+              onValueChange={(v) => setSelectedJarId(v ?? "")}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Choose a Jar">
                   {selectedJarId && jarBalances
-                    ? (JAR_FULL_NAMES[jarBalances.find(jb => jb.jar._id === selectedJarId)?.jar.name ?? ""] ?? "Choose a Jar")
+                    ? (JAR_FULL_NAMES[
+                        jarBalances.find((jb) => jb.jar._id === selectedJarId)
+                          ?.jar.name ?? ""
+                      ] ?? "Choose a Jar")
                     : "Choose a Jar"}
                 </SelectValue>
               </SelectTrigger>
@@ -105,7 +113,7 @@ export function AddToJarDialog({ currency, children }: AddToJarDialogProps) {
                       />
                       <span>{JAR_FULL_NAMES[jb.jar.name] ?? jb.jar.name}</span>
                       <span className="text-muted-foreground">
-                        ({formatCurrency(jb.balance, currency)})
+                        ({formatDisplayAmount(jb.balance)})
                       </span>
                     </div>
                   </SelectItem>

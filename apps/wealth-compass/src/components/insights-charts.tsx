@@ -26,7 +26,6 @@ import {
 } from "recharts"
 import { TrendingUp, TrendingDown } from "lucide-react"
 import { useCurrency } from "@wealth-compass/lib/use-currency"
-import { formatCurrency } from "@wealth-compass/lib/currency"
 import { formatDashboardMonth } from "@wealth-compass/lib/dashboard-data"
 
 interface SpendingByJarItem {
@@ -93,7 +92,7 @@ export function MonthlyBalanceBarChart({
 }: {
   data: MonthlyBalanceItem[]
 }) {
-  const { currency } = useCurrency()
+  const { formatDisplayAmount } = useCurrency()
   const series = getSeries(data)
   const seriesKeys = new Map(series.map((item) => [item.source, item.key]))
   const months = [...new Set(data.map((item) => item.month))]
@@ -123,7 +122,7 @@ export function MonthlyBalanceBarChart({
           content={
             <ChartTooltipContent
               labelFormatter={(value) => formatDashboardMonth(String(value))}
-              formatter={(value) => formatCurrency(Number(value), currency)}
+              formatter={(value) => formatDisplayAmount(Number(value))}
             />
           }
         />
@@ -141,7 +140,7 @@ export function MonthlyBalanceBarChart({
 }
 
 export function SpendingByJarBarChart({ data }: { data: SpendingByJarItem[] }) {
-  const { currency } = useCurrency()
+  const { formatDisplayAmount } = useCurrency()
 
   const chartConfig: ChartConfig = Object.fromEntries(
     data.map((item) => [
@@ -159,7 +158,7 @@ export function SpendingByJarBarChart({ data }: { data: SpendingByJarItem[] }) {
         <ChartTooltip
           content={
             <ChartTooltipContent
-              formatter={(value) => formatCurrency(Number(value), currency)}
+              formatter={(value) => formatDisplayAmount(Number(value))}
             />
           }
         />
@@ -177,7 +176,7 @@ export function SpendingByJarBarChart({ data }: { data: SpendingByJarItem[] }) {
 }
 
 export function SpendingTrendLineChart({ data }: { data: MonthlyTrendItem[] }) {
-  const { currency } = useCurrency()
+  const { formatDisplayAmount } = useCurrency()
 
   const series = getSeries(data)
   const seriesKeys = new Map(series.map((item) => [item.source, item.key]))
@@ -210,7 +209,7 @@ export function SpendingTrendLineChart({ data }: { data: MonthlyTrendItem[] }) {
           content={
             <ChartTooltipContent
               labelFormatter={(value) => formatDashboardMonth(String(value))}
-              formatter={(value) => formatCurrency(Number(value), currency)}
+              formatter={(value) => formatDisplayAmount(Number(value))}
             />
           }
         />
@@ -234,7 +233,7 @@ export function IncomeVsSpendingLineChart({
 }: {
   data: IncomeVsSpendingItem[]
 }) {
-  const { currency } = useCurrency()
+  const { formatDisplayAmount } = useCurrency()
 
   const chartConfig: ChartConfig = {
     income: { label: "Income", color: "#22C55E" },
@@ -250,7 +249,7 @@ export function IncomeVsSpendingLineChart({
         <ChartTooltip
           content={
             <ChartTooltipContent
-              formatter={(value) => formatCurrency(Number(value), currency)}
+              formatter={(value) => formatDisplayAmount(Number(value))}
             />
           }
         />
@@ -276,7 +275,7 @@ export function IncomeVsSpendingLineChart({
 }
 
 export function CategoryBreakdownPieChart({ data }: { data: CategoryItem[] }) {
-  const { currency } = useCurrency()
+  const { formatDisplayAmount } = useCurrency()
 
   const aggregated = Object.values(
     data.reduce(
@@ -321,7 +320,7 @@ export function CategoryBreakdownPieChart({ data }: { data: CategoryItem[] }) {
           content={
             <ChartTooltipContent
               nameKey="name"
-              formatter={(value) => formatCurrency(Number(value), currency)}
+              formatter={(value) => formatDisplayAmount(Number(value))}
             />
           }
         />
@@ -349,7 +348,7 @@ export function CategoryBreakdownPieChart({ data }: { data: CategoryItem[] }) {
 }
 
 export function MonthComparisonCard({ data }: { data: MonthComparisonData }) {
-  const { currency } = useCurrency()
+  const { formatDisplayAmount } = useCurrency()
 
   const spendingDelta = data.current.spending - data.previous.spending
   const spendingPct =
@@ -376,10 +375,10 @@ export function MonthComparisonCard({ data }: { data: MonthComparisonData }) {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-lg font-bold">
-                {formatCurrency(data.current.spending, currency)}
+                {formatDisplayAmount(data.current.spending)}
               </div>
               <div className="text-xs text-muted-foreground">
-                vs {formatCurrency(data.previous.spending, currency)} last month
+                vs {formatDisplayAmount(data.previous.spending)} last month
               </div>
             </div>
             <div
@@ -403,10 +402,10 @@ export function MonthComparisonCard({ data }: { data: MonthComparisonData }) {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-lg font-bold">
-                {formatCurrency(data.current.income, currency)}
+                {formatDisplayAmount(data.current.income)}
               </div>
               <div className="text-xs text-muted-foreground">
-                vs {formatCurrency(data.previous.income, currency)} last month
+                vs {formatDisplayAmount(data.previous.income)} last month
               </div>
             </div>
             <div
@@ -431,7 +430,7 @@ export function MonthComparisonCard({ data }: { data: MonthComparisonData }) {
 }
 
 export function TopCategoriesList({ data }: { data: CategoryItem[] }) {
-  const { currency } = useCurrency()
+  const { formatDisplayAmount } = useCurrency()
 
   const aggregated = Object.values(
     data.reduce(
@@ -458,7 +457,7 @@ export function TopCategoriesList({ data }: { data: CategoryItem[] }) {
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">{item.categoryName}</span>
             <span className="text-muted-foreground">
-              {formatCurrency(item.total, currency)}
+              {formatDisplayAmount(item.total)}
             </span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-muted">

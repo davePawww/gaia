@@ -28,6 +28,7 @@ import {
   filterTransactions,
   type ExportTransaction,
 } from "@wealth-compass/lib/transaction-export"
+import { useCurrency } from "@wealth-compass/lib/use-currency"
 
 interface ExportDialogProps {
   currency: CurrencyCode
@@ -57,6 +58,7 @@ const FORMAT_LABELS: Record<string, string> = {
 }
 
 export function ExportDialog({ currency, children }: ExportDialogProps) {
+  const { toDisplayAmount } = useCurrency()
   const [open, setOpen] = useState(false)
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
@@ -82,14 +84,33 @@ export function ExportDialog({ currency, children }: ExportDialogProps) {
     }
 
     const today = new Date().toISOString().slice(0, 10)
-    const exportTransactions = filtered as ExportTransaction[]
-    const exportJars = jarBalances ?? []
+    const exportTransactions: ExportTransaction[] = filtered.map(
+      (transaction) => ({
+        ...transaction,
+        amount: toDisplayAmount(transaction.amount),
+      })
+    )
+    const exportJars =
+      jarBalances?.map((item) => ({
+        ...item,
+        balance: toDisplayAmount(item.balance),
+      })) ?? []
 
     if (format === "csv") {
-      const exported = buildCsvExport(exportTransactions, exportJars, currency, today)
+      const exported = buildCsvExport(
+        exportTransactions,
+        exportJars,
+        currency,
+        today
+      )
       downloadFile(exported.content, exported.filename, exported.mimeType)
     } else {
-      const exported = buildJsonExport(exportTransactions, exportJars, currency, today)
+      const exported = buildJsonExport(
+        exportTransactions,
+        exportJars,
+        currency,
+        today
+      )
       downloadFile(exported.content, exported.filename, exported.mimeType)
     }
 
@@ -114,7 +135,7 @@ export function ExportDialog({ currency, children }: ExportDialogProps) {
               <input
                 id="export-from"
                 type="date"
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
               />
@@ -124,7 +145,7 @@ export function ExportDialog({ currency, children }: ExportDialogProps) {
               <input
                 id="export-to"
                 type="date"
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
               />
@@ -132,7 +153,10 @@ export function ExportDialog({ currency, children }: ExportDialogProps) {
           </div>
           <div className="space-y-2">
             <Label>Transaction Type</Label>
-            <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v ?? "all")}>
+            <Select
+              value={typeFilter}
+              onValueChange={(v) => setTypeFilter(v ?? "all")}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="All Types">
                   {TYPE_LABELS[typeFilter] ?? "All Types"}
@@ -148,12 +172,18 @@ export function ExportDialog({ currency, children }: ExportDialogProps) {
           </div>
           <div className="space-y-2">
             <Label>Jar</Label>
-            <Select value={jarFilter} onValueChange={(v) => setJarFilter(v ?? "all")}>
+            <Select
+              value={jarFilter}
+              onValueChange={(v) => setJarFilter(v ?? "all")}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="All Jars">
                   {jarFilter === "all"
                     ? "All Jars"
-                    : (JAR_FULL_NAMES[jarBalances?.find((jb) => jb.jar._id === jarFilter)?.jar.name ?? ""] ?? "All Jars")}
+                    : (JAR_FULL_NAMES[
+                        jarBalances?.find((jb) => jb.jar._id === jarFilter)?.jar
+                          .name ?? ""
+                      ] ?? "All Jars")}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>

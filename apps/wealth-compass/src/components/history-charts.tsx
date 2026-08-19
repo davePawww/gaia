@@ -11,7 +11,7 @@ import {
   type ChartConfig,
 } from "@gaia/ui/components/chart"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts"
-import { formatCurrency, type CurrencyCode } from "@wealth-compass/lib/currency"
+import { useCurrency } from "@wealth-compass/lib/use-currency"
 
 interface Transaction {
   _id: string
@@ -30,7 +30,6 @@ interface JarBalance {
 interface HistoryChartsProps {
   transactions: Transaction[]
   jarBalances: JarBalance[]
-  currency: CurrencyCode
   period: "weekly" | "monthly" | "yearly"
 }
 
@@ -39,11 +38,8 @@ const chartConfig = {
   withdrawals: { label: "Withdrawals", color: "#EF4444" },
 } satisfies ChartConfig
 
-export function HistoryCharts({
-  transactions,
-  currency,
-  period,
-}: HistoryChartsProps) {
+export function HistoryCharts({ transactions, period }: HistoryChartsProps) {
+  const { formatDisplayAmount } = useCurrency()
   const getChartData = () => {
     const now = Date.now()
     const dayMs = 24 * 60 * 60 * 1000
@@ -55,11 +51,11 @@ export function HistoryCharts({
         const dayStart = new Date(
           date.getFullYear(),
           date.getMonth(),
-          date.getDate(),
+          date.getDate()
         ).getTime()
         const dayEnd = dayStart + dayMs
         const dayTx = transactions.filter(
-          (t) => t.createdAt >= dayStart && t.createdAt < dayEnd,
+          (t) => t.createdAt >= dayStart && t.createdAt < dayEnd
         )
         return {
           name: days[date.getDay()],
@@ -79,7 +75,7 @@ export function HistoryCharts({
         const weekStart = now - (4 - i) * 7 * dayMs
         const weekEnd = weekStart + 7 * dayMs
         const weekTx = transactions.filter(
-          (t) => t.createdAt >= weekStart && t.createdAt < weekEnd,
+          (t) => t.createdAt >= weekStart && t.createdAt < weekEnd
         )
         return {
           name: weeks[i],
@@ -94,8 +90,18 @@ export function HistoryCharts({
     }
 
     const months = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ]
     return Array.from({ length: 12 }, (_, i) => {
       const date = new Date(now)
@@ -103,15 +109,15 @@ export function HistoryCharts({
       const monthStart = new Date(
         date.getFullYear(),
         date.getMonth(),
-        1,
+        1
       ).getTime()
       const monthEnd = new Date(
         date.getFullYear(),
         date.getMonth() + 1,
-        1,
+        1
       ).getTime()
       const monthTx = transactions.filter(
-        (t) => t.createdAt >= monthStart && t.createdAt < monthEnd,
+        (t) => t.createdAt >= monthStart && t.createdAt < monthEnd
       )
       return {
         name: months[date.getMonth()],
@@ -147,9 +153,7 @@ export function HistoryCharts({
               <ChartTooltip
                 content={
                   <ChartTooltipContent
-                    formatter={(value) =>
-                      formatCurrency(Number(value), currency)
-                    }
+                    formatter={(value) => formatDisplayAmount(Number(value))}
                   />
                 }
               />

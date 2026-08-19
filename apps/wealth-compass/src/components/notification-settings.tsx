@@ -40,24 +40,32 @@ import {
   getNotificationPermission,
   registerServiceWorker,
 } from "../lib/notifications"
+import { useCurrency } from "../lib/use-currency"
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY ?? ""
 type ReminderFrequency = "daily" | "weekly" | "custom"
 
 export function NotificationSettings() {
+  const { currency, toCanonicalAmount, toDisplayAmount } = useCurrency()
   const prefs = useQuery(api.notifications.getPreferences)
   const upsertPrefs = useMutation(api.notifications.upsertPreferences)
-  const sendTestNotification = useMutation(api.notifications.sendTestNotification)
-  const clearAllNotifications = useMutation(api.notifications.clearAllNotifications)
+  const sendTestNotification = useMutation(
+    api.notifications.sendTestNotification
+  )
+  const clearAllNotifications = useMutation(
+    api.notifications.clearAllNotifications
+  )
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)
   const [clearing, setClearing] = useState(false)
   const [clearDialogOpen, setClearDialogOpen] = useState(false)
 
-  const [incomeAllocationReminder, setIncomeAllocationReminder] = useState(false)
+  const [incomeAllocationReminder, setIncomeAllocationReminder] =
+    useState(false)
   const [incomeAllocationFrequency, setIncomeAllocationFrequency] =
     useState<ReminderFrequency>("daily")
-  const [incomeAllocationCustomDay, setIncomeAllocationCustomDay] = useState("1")
+  const [incomeAllocationCustomDay, setIncomeAllocationCustomDay] =
+    useState("1")
   const [goalDeadlineApproaching, setGoalDeadlineApproaching] = useState(false)
   const [goalCompleted, setGoalCompleted] = useState(false)
   const [spendingLimitWarning, setSpendingLimitWarning] = useState(false)
@@ -68,13 +76,13 @@ export function NotificationSettings() {
   const [quietHoursStart, setQuietHoursStart] = useState("22:00")
   const [quietHoursEnd, setQuietHoursEnd] = useState("07:00")
   const [quietHoursTimezone] = useState(
-    () => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+    () => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
   )
 
   const [pushEnabled, setPushEnabled] = useState(false)
-  const [permission, setPermission] = useState<NotificationPermission | "unsupported">(
-    "unsupported",
-  )
+  const [permission, setPermission] = useState<
+    NotificationPermission | "unsupported"
+  >("unsupported")
 
   useEffect(() => {
     getNotificationPermission().then(setPermission)
@@ -90,13 +98,15 @@ export function NotificationSettings() {
       setGoalCompleted(prefs.goalCompleted)
       setSpendingLimitWarning(prefs.spendingLimitWarning)
       setMonthlySpendingSummary(prefs.monthlySpendingSummary)
-      setSpendingLimitThreshold(String(prefs.spendingLimitThreshold))
+      setSpendingLimitThreshold(
+        String(toDisplayAmount(prefs.spendingLimitThreshold))
+      )
       setGoalDeadlineDays(String(prefs.goalDeadlineDays))
       setQuietHoursEnabled(prefs.quietHoursEnabled ?? false)
       setQuietHoursStart(prefs.quietHoursStart ?? "22:00")
       setQuietHoursEnd(prefs.quietHoursEnd ?? "07:00")
     }
-  }, [prefs])
+  }, [prefs, toDisplayAmount])
 
   useEffect(() => {
     if (permission === "granted") {
@@ -122,7 +132,7 @@ export function NotificationSettings() {
           toast.error(
             nextPermission === "denied"
               ? "Notifications are blocked in your browser settings"
-              : "Could not create a browser push subscription",
+              : "Could not create a browser push subscription"
           )
           return
         }
@@ -135,12 +145,13 @@ export function NotificationSettings() {
         const errorName = error instanceof Error ? error.name : ""
         const errorMessage = error instanceof Error ? error.message : ""
         const isPushServiceError =
-          errorName === "AbortError" || errorMessage.includes("push service error")
+          errorName === "AbortError" ||
+          errorMessage.includes("push service error")
 
         toast.error(
           isPushServiceError
             ? "Your browser push service rejected the subscription. In Brave, enable Use Google Services for Push Messaging and try again."
-            : "Could not enable push notifications",
+            : "Could not enable push notifications"
         )
       }
     } else {
@@ -162,13 +173,15 @@ export function NotificationSettings() {
         incomeAllocationFrequency,
         incomeAllocationCustomDay: Math.min(
           Math.max(Number(incomeAllocationCustomDay) || 1, 1),
-          28,
+          28
         ),
         goalDeadlineApproaching,
         goalCompleted,
         spendingLimitWarning,
         monthlySpendingSummary,
-        spendingLimitThreshold: Number(spendingLimitThreshold) || 50,
+        spendingLimitThreshold: toCanonicalAmount(
+          Number(spendingLimitThreshold) || 50
+        ),
         goalDeadlineDays: Number(goalDeadlineDays) || 7,
         quietHoursEnabled,
         quietHoursStart,
@@ -203,7 +216,7 @@ export function NotificationSettings() {
       toast.success(
         result.deleted === 0
           ? "Notification history is already empty"
-          : `Cleared ${result.deleted} notification${result.deleted === 1 ? "" : "s"}`,
+          : `Cleared ${result.deleted} notification${result.deleted === 1 ? "" : "s"}`
       )
     } catch {
       toast.error("Could not clear notification history")
@@ -258,23 +271,41 @@ export function NotificationSettings() {
             />
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={handleSendTest} disabled={testing}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSendTest}
+              disabled={testing}
+            >
               {testing ? "Sending..." : "Send Test Notification"}
             </Button>
-            <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
-              <AlertDialogTrigger render={<Button variant="outline" size="sm" />}>
+            <AlertDialog
+              open={clearDialogOpen}
+              onOpenChange={setClearDialogOpen}
+            >
+              <AlertDialogTrigger
+                render={<Button variant="outline" size="sm" />}
+              >
                 Clear Notification History
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Clear notification history?</AlertDialogTitle>
+                  <AlertDialogTitle>
+                    Clear notification history?
+                  </AlertDialogTitle>
                   <AlertDialogDescription>
-                    This permanently removes the notifications shown in your notification center.
+                    This permanently removes the notifications shown in your
+                    notification center.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel disabled={clearing}>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleClearAll} disabled={clearing}>
+                  <AlertDialogCancel disabled={clearing}>
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleClearAll}
+                    disabled={clearing}
+                  >
                     {clearing ? "Clearing..." : "Clear History"}
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -282,7 +313,8 @@ export function NotificationSettings() {
             </AlertDialog>
           </div>
           <p className="text-xs text-muted-foreground">
-            Test notifications are also added to your in-app notification center.
+            Test notifications are also added to your in-app notification
+            center.
           </p>
         </div>
 
@@ -302,7 +334,9 @@ export function NotificationSettings() {
                 <Select
                   value={incomeAllocationFrequency}
                   onValueChange={(value) =>
-                    setIncomeAllocationFrequency((value as ReminderFrequency) ?? "daily")
+                    setIncomeAllocationFrequency(
+                      (value as ReminderFrequency) ?? "daily"
+                    )
                   }
                 >
                   <SelectTrigger className="w-full">
@@ -324,9 +358,13 @@ export function NotificationSettings() {
                     min="1"
                     max="28"
                     value={incomeAllocationCustomDay}
-                    onChange={(e) => setIncomeAllocationCustomDay(e.target.value)}
+                    onChange={(e) =>
+                      setIncomeAllocationCustomDay(e.target.value)
+                    }
                   />
-                  <p className="text-xs text-muted-foreground">Choose a day from 1 to 28.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Choose a day from 1 to 28.
+                  </p>
                 </div>
               )}
             </div>
@@ -361,7 +399,9 @@ export function NotificationSettings() {
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="spending-threshold">Spending Limit Threshold ($)</Label>
+            <Label htmlFor="spending-threshold">
+              Spending Limit Threshold ({currency})
+            </Label>
             <Input
               id="spending-threshold"
               type="number"
@@ -419,7 +459,8 @@ export function NotificationSettings() {
                 />
               </div>
               <p className="text-xs text-muted-foreground sm:col-span-2">
-                Quiet hours use your browser timezone ({quietHoursTimezone}). In-app history is preserved.
+                Quiet hours use your browser timezone ({quietHoursTimezone}).
+                In-app history is preserved.
               </p>
             </div>
           )}

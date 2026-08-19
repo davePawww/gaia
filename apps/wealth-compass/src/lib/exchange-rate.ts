@@ -8,6 +8,26 @@ export function convertCurrency(amount: number, rate: number): number {
   return amount * rate
 }
 
+export function convertFromCanonical(
+  amount: number,
+  displayRate: number
+): number {
+  return convertCurrency(amount, displayRate)
+}
+
+export function convertToCanonical(
+  amount: number,
+  displayRate: number
+): number {
+  if (!Number.isFinite(amount) || amount < 0) {
+    throw new Error("Amount must be a non-negative number")
+  }
+  if (!Number.isFinite(displayRate) || displayRate <= 0) {
+    throw new Error("Display rate must be positive")
+  }
+  return amount / displayRate
+}
+
 export function describeRateAge(fetchedAt: number, now = Date.now()): string {
   const elapsedMinutes = Math.max(0, Math.floor((now - fetchedAt) / 60_000))
   if (elapsedMinutes < 1) return "just now"

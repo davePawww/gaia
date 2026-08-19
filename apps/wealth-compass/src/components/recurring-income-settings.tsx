@@ -22,7 +22,7 @@ import { Badge } from "@gaia/ui/components/badge"
 import { Pause, Pencil, Play, Plus, Trash2 } from "lucide-react"
 import type { Id } from "../../convex/_generated/dataModel"
 import { toast } from "sonner"
-import { formatCurrency, type CurrencyCode } from "@wealth-compass/lib/currency"
+import { useCurrency } from "@wealth-compass/lib/use-currency"
 
 type Frequency = "weekly" | "biweekly" | "monthly"
 
@@ -30,11 +30,9 @@ function dateValue(timestamp: number) {
   return new Date(timestamp).toISOString().slice(0, 10)
 }
 
-export function RecurringIncomeSettings({
-  currency,
-}: {
-  currency: CurrencyCode
-}) {
+export function RecurringIncomeSettings() {
+  const { formatDisplayAmount, toCanonicalAmount, toDisplayAmount } =
+    useCurrency()
   const rules = useQuery(api.recurringIncomes.getUserRecurringIncomes)
   const create = useMutation(api.recurringIncomes.createRecurringIncome)
   const update = useMutation(api.recurringIncomes.updateRecurringIncome)
@@ -60,7 +58,7 @@ export function RecurringIncomeSettings({
     setSaving(true)
     try {
       const args = {
-        amount: parsedAmount,
+        amount: toCanonicalAmount(parsedAmount),
         frequency,
         nextOccurrence: timestamp,
         source: source.trim() || undefined,
@@ -88,7 +86,7 @@ export function RecurringIncomeSettings({
 
   const beginEdit = (rule: NonNullable<typeof rules>[number]) => {
     setEditingId(rule._id)
-    setAmount(String(rule.amount))
+    setAmount(String(toDisplayAmount(rule.amount)))
     setFrequency(rule.frequency)
     setNextOccurrence(dateValue(rule.nextOccurrence))
     setSource(rule.source ?? "")
@@ -202,7 +200,7 @@ export function RecurringIncomeSettings({
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-medium">
-                  {formatCurrency(rule.amount, currency)} · {rule.frequency}
+                  {formatDisplayAmount(rule.amount)} · {rule.frequency}
                 </span>
                 <Badge variant={rule.active ? "secondary" : "outline"}>
                   {rule.active ? "Active" : "Paused"}

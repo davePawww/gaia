@@ -22,7 +22,7 @@ import {
 } from "@gaia/ui/components/select"
 import { toast } from "sonner"
 import { JAR_FULL_NAMES } from "../../convex/constants"
-import type { CurrencyCode } from "@wealth-compass/lib/currency"
+import { useCurrency } from "@wealth-compass/lib/use-currency"
 
 type GoalType = "jar" | "netWorth"
 
@@ -32,14 +32,11 @@ const GOAL_TYPE_LABELS: Record<GoalType, string> = {
 }
 
 interface CreateGoalDialogProps {
-  currency: CurrencyCode
   children: ReactElement
 }
 
-export function CreateGoalDialog({
-  currency: _currency,
-  children,
-}: CreateGoalDialogProps) {
+export function CreateGoalDialog({ children }: CreateGoalDialogProps) {
+  const { toCanonicalAmount } = useCurrency()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [type, setType] = useState<GoalType>("netWorth")
@@ -70,7 +67,7 @@ export function CreateGoalDialog({
       await createGoal({
         name: name.trim(),
         type,
-        targetAmount: parseFloat(targetAmount),
+        targetAmount: toCanonicalAmount(parseFloat(targetAmount)),
         jarId: type === "jar" ? selectedJar?._id : undefined,
         deadline: deadline ? new Date(deadline).getTime() : undefined,
       })

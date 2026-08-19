@@ -37,7 +37,7 @@ import { useState } from "react"
 const TRANSACTIONS_PAGE_SIZE = 10
 
 function TransactionsPage() {
-  const { currency } = useCurrency()
+  const { currency, formatDisplayAmount } = useCurrency()
   const transactions = useQuery(api.transactions.getUserTransactions)
   const jarBalances = useQuery(api.jars.getJarBalances)
   const categories = useQuery(api.categories.getUserCategories)
@@ -381,7 +381,7 @@ function TransactionsPage() {
                         }`}
                       >
                         {t.type === "income" ? "+" : "-"}
-                        {formatCurrency(t.amount, convertedCurrency)}
+                        {formatDisplayAmount(t.amount)}
                       </span>
                       <Button
                         variant="ghost"

@@ -47,7 +47,7 @@ import {
   type DashboardGoal,
   type GoalStatus,
 } from "@wealth-compass/lib/dashboard-data"
-import { formatCurrency, type CurrencyCode } from "@wealth-compass/lib/currency"
+import { useCurrency } from "@wealth-compass/lib/use-currency"
 
 type GoalType = "jar" | "netWorth"
 
@@ -65,7 +65,6 @@ interface GoalDetail {
 
 interface GoalDetailDialogProps {
   goal: GoalDetail
-  currency: CurrencyCode
   children: ReactElement
 }
 
@@ -95,16 +94,16 @@ function asDashboardGoal(goal: GoalDetail): DashboardGoal {
   }
 }
 
-export function GoalDetailDialog({
-  goal,
-  currency,
-  children,
-}: GoalDetailDialogProps) {
+export function GoalDetailDialog({ goal, children }: GoalDetailDialogProps) {
+  const { formatDisplayAmount, toCanonicalAmount, toDisplayAmount } =
+    useCurrency()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(goal.name)
   const [type, setType] = useState<GoalType>(goal.type)
   const [jarId, setJarId] = useState<string>(goal.jarId ?? "")
-  const [targetAmount, setTargetAmount] = useState(String(goal.targetAmount))
+  const [targetAmount, setTargetAmount] = useState(
+    String(toDisplayAmount(goal.targetAmount))
+  )
   const [deadline, setDeadline] = useState(toDateInputValue(goal.deadline))
   const [milestoneName, setMilestoneName] = useState("")
   const [milestoneAmount, setMilestoneAmount] = useState("")
@@ -126,9 +125,9 @@ export function GoalDetailDialog({
     setName(goal.name)
     setType(goal.type)
     setJarId(goal.jarId ?? "")
-    setTargetAmount(String(goal.targetAmount))
+    setTargetAmount(String(toDisplayAmount(goal.targetAmount)))
     setDeadline(toDateInputValue(goal.deadline))
-  }, [goal, open])
+  }, [goal, open, toDisplayAmount])
 
   useEffect(() => {
     setStatusOverride(null)
@@ -177,7 +176,7 @@ export function GoalDetailDialog({
         goalId: goal._id,
         name: name.trim(),
         type,
-        targetAmount: Number(targetAmount),
+        targetAmount: toCanonicalAmount(Number(targetAmount)),
         jarId: type === "jar" ? selectedJar?._id : undefined,
         deadline: deadline ? new Date(deadline).getTime() : undefined,
         clearDeadline: deadline.length === 0,
@@ -216,7 +215,7 @@ export function GoalDetailDialog({
       await createMilestone({
         goalId: goal._id,
         name: milestoneName.trim(),
-        targetAmount: amount,
+        targetAmount: toCanonicalAmount(amount),
       })
       setMilestoneName("")
       setMilestoneAmount("")
@@ -248,10 +247,10 @@ export function GoalDetailDialog({
             <CardContent className="space-y-3">
               <div className="flex items-baseline justify-between gap-3">
                 <span className="text-2xl font-bold">
-                  {formatCurrency(progress.currentAmount, currency)}
+                  {formatDisplayAmount(progress.currentAmount)}
                 </span>
                 <span className="text-sm text-muted-foreground">
-                  of {formatCurrency(goal.targetAmount, currency)}
+                  of {formatDisplayAmount(goal.targetAmount)}
                 </span>
               </div>
               <Progress
@@ -367,7 +366,7 @@ export function GoalDetailDialog({
                             formatDashboardMonth(String(value))
                           }
                           formatter={(value) =>
-                            formatCurrency(Number(value), currency)
+                            formatDisplayAmount(Number(value))
                           }
                         />
                       }
@@ -408,7 +407,7 @@ export function GoalDetailDialog({
                     <div>
                       <p className="text-sm font-medium">{milestone.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {formatCurrency(milestone.targetAmount, currency)} ·{" "}
+                        {formatDisplayAmount(milestone.targetAmount)} ·{" "}
                         {isComplete ? "Completed" : "In progress"}
                       </p>
                     </div>

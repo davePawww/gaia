@@ -15,11 +15,10 @@ import {
 } from "@gaia/ui/components/tabs"
 import { Skeleton } from "@gaia/ui/components/skeleton"
 import { useCurrency } from "@wealth-compass/lib/use-currency"
-import { formatCurrency } from "@wealth-compass/lib/currency"
 import { HistoryCharts } from "@wealth-compass/components/history-charts"
 
 function HistoryPage() {
-  const { currency } = useCurrency()
+  const { formatDisplayAmount } = useCurrency()
   const transactions = useQuery(api.transactions.getUserTransactions)
   const jarBalances = useQuery(api.jars.getJarBalances)
 
@@ -67,13 +66,11 @@ function HistoryPage() {
             <div className="grid gap-4 sm:grid-cols-3">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Income
-                  </CardTitle>
+                  <CardTitle className="text-sm font-medium">Income</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {formatCurrency(weekly.income, currency)}
+                    {formatDisplayAmount(weekly.income)}
                   </div>
                 </CardContent>
               </Card>
@@ -85,7 +82,7 @@ function HistoryPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-                    {formatCurrency(weekly.withdrawals, currency)}
+                    {formatDisplayAmount(weekly.withdrawals)}
                   </div>
                 </CardContent>
               </Card>
@@ -97,7 +94,7 @@ function HistoryPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {formatCurrency(weekly.transfers, currency)}
+                    {formatDisplayAmount(weekly.transfers)}
                   </div>
                 </CardContent>
               </Card>
@@ -105,7 +102,6 @@ function HistoryPage() {
             <HistoryCharts
               transactions={transactions ?? []}
               jarBalances={jarBalances ?? []}
-              currency={currency}
               period="weekly"
             />
           </TabsContent>
@@ -114,13 +110,11 @@ function HistoryPage() {
             <div className="grid gap-4 sm:grid-cols-3">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Income
-                  </CardTitle>
+                  <CardTitle className="text-sm font-medium">Income</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {formatCurrency(monthly.income, currency)}
+                    {formatDisplayAmount(monthly.income)}
                   </div>
                 </CardContent>
               </Card>
@@ -132,7 +126,7 @@ function HistoryPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-                    {formatCurrency(monthly.withdrawals, currency)}
+                    {formatDisplayAmount(monthly.withdrawals)}
                   </div>
                 </CardContent>
               </Card>
@@ -144,7 +138,7 @@ function HistoryPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {formatCurrency(monthly.transfers, currency)}
+                    {formatDisplayAmount(monthly.transfers)}
                   </div>
                 </CardContent>
               </Card>
@@ -152,7 +146,6 @@ function HistoryPage() {
             <HistoryCharts
               transactions={transactions ?? []}
               jarBalances={jarBalances ?? []}
-              currency={currency}
               period="monthly"
             />
           </TabsContent>
@@ -161,13 +154,11 @@ function HistoryPage() {
             <div className="grid gap-4 sm:grid-cols-3">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Income
-                  </CardTitle>
+                  <CardTitle className="text-sm font-medium">Income</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {formatCurrency(yearly.income, currency)}
+                    {formatDisplayAmount(yearly.income)}
                   </div>
                 </CardContent>
               </Card>
@@ -179,7 +170,7 @@ function HistoryPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-                    {formatCurrency(yearly.withdrawals, currency)}
+                    {formatDisplayAmount(yearly.withdrawals)}
                   </div>
                 </CardContent>
               </Card>
@@ -191,7 +182,7 @@ function HistoryPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {formatCurrency(yearly.transfers, currency)}
+                    {formatDisplayAmount(yearly.transfers)}
                   </div>
                 </CardContent>
               </Card>
@@ -199,7 +190,6 @@ function HistoryPage() {
             <HistoryCharts
               transactions={transactions ?? []}
               jarBalances={jarBalances ?? []}
-              currency={currency}
               period="yearly"
             />
           </TabsContent>

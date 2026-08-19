@@ -9,7 +9,7 @@ import { Badge } from "@gaia/ui/components/badge"
 import { Progress } from "@gaia/ui/components/progress"
 import { Skeleton } from "@gaia/ui/components/skeleton"
 import { Target, Wallet } from "lucide-react"
-import { formatCurrency, type CurrencyCode } from "@wealth-compass/lib/currency"
+import { useCurrency } from "@wealth-compass/lib/use-currency"
 import {
   getGoalProgress,
   type DashboardGoal,
@@ -19,7 +19,6 @@ import {
 interface DashboardGoalsCardProps {
   goals: DashboardGoal[] | undefined
   jarBalances: DashboardJarBalance[] | undefined
-  currency: CurrencyCode
 }
 
 function daysRemaining(deadline: number | undefined): number | null {
@@ -30,8 +29,8 @@ function daysRemaining(deadline: number | undefined): number | null {
 export function DashboardGoalsCard({
   goals,
   jarBalances,
-  currency,
 }: DashboardGoalsCardProps) {
+  const { formatDisplayAmount } = useCurrency()
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -99,8 +98,8 @@ export function DashboardGoalsCard({
                   />
                   <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
                     <span>
-                      {formatCurrency(progress.currentAmount, currency)} of{" "}
-                      {formatCurrency(goal.targetAmount, currency)}
+                      {formatDisplayAmount(progress.currentAmount)} of{" "}
+                      {formatDisplayAmount(goal.targetAmount)}
                     </span>
                     {remaining !== null && (
                       <Badge

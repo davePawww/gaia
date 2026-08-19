@@ -25,6 +25,7 @@ import { toast } from "sonner"
 import { ArrowRightLeft } from "lucide-react"
 import { formatCurrency, type CurrencyCode } from "@wealth-compass/lib/currency"
 import type { Id } from "../../convex/_generated/dataModel"
+import { useCurrency } from "@wealth-compass/lib/use-currency"
 
 interface TransferDialogProps {
   currency: CurrencyCode
@@ -32,6 +33,7 @@ interface TransferDialogProps {
 }
 
 export function TransferDialog({ currency, children }: TransferDialogProps) {
+  const { formatDisplayAmount, toCanonicalAmount } = useCurrency()
   const [open, setOpen] = useState(false)
   const [fromJarId, setFromJarId] = useState<string>("")
   const [toJarId, setToJarId] = useState<string>("")
@@ -52,6 +54,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
   const transfer = useMutation(api.transactions.transfer)
 
   const totalAmount = parseFloat(amount) || 0
+  const canonicalAmount = toCanonicalAmount(totalAmount)
   const fromJar = jarBalances?.find((jb) => jb.jar._id === fromJarId)
   const toJar = jarBalances?.find((jb) => jb.jar._id === toJarId)
   const selectedCategory = categories?.find((cat) => cat._id === categoryId)
@@ -69,7 +72,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
       toast.error("Please enter a valid amount")
       return
     }
-    if (fromJar && totalAmount > fromJar.balance) {
+    if (fromJar && canonicalAmount > fromJar.balance) {
       toast.error("Insufficient balance in source jar")
       return
     }
@@ -79,7 +82,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
       await transfer({
         fromJarId: fromJarId as Id<"jars">,
         toJarId: toJarId as Id<"jars">,
-        amount: totalAmount,
+        amount: canonicalAmount,
         note: note.trim() || undefined,
         categoryId: categoryId ? (categoryId as Id<"categories">) : undefined,
       })
@@ -140,7 +143,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
                       />
                       <span>{JAR_FULL_NAMES[jb.jar.name] ?? jb.jar.name}</span>
                       <span className="text-muted-foreground">
-                        ({formatCurrency(jb.balance, currency)})
+                        ({formatDisplayAmount(jb.balance)})
                       </span>
                     </div>
                   </SelectItem>
@@ -180,7 +183,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
                           {JAR_FULL_NAMES[jb.jar.name] ?? jb.jar.name}
                         </span>
                         <span className="text-muted-foreground">
-                          ({formatCurrency(jb.balance, currency)})
+                          ({formatDisplayAmount(jb.balance)})
                         </span>
                       </div>
                     </SelectItem>
@@ -203,7 +206,7 @@ export function TransferDialog({ currency, children }: TransferDialogProps) {
             {fromJar && (
               <p className="text-xs text-muted-foreground">
                 Available in {fromJar.jar.name}:{" "}
-                {formatCurrency(fromJar.balance, currency)}
+                {formatDisplayAmount(fromJar.balance)}
               </p>
             )}
           </div>

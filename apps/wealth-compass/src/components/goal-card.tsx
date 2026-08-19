@@ -11,7 +11,7 @@ import { Badge } from "@gaia/ui/components/badge"
 import { Progress } from "@gaia/ui/components/progress"
 import { Pencil, Trash2, Target, Wallet } from "lucide-react"
 import { toast } from "sonner"
-import { formatCurrency, type CurrencyCode } from "@wealth-compass/lib/currency"
+import { useCurrency } from "@wealth-compass/lib/use-currency"
 import {
   getGoalStatus,
   type DashboardGoal,
@@ -31,10 +31,10 @@ interface GoalCardProps {
     completedAt?: number
     archivedAt?: number
   }
-  currency: CurrencyCode
 }
 
-export function GoalCard({ goal, currency }: GoalCardProps) {
+export function GoalCard({ goal }: GoalCardProps) {
+  const { formatDisplayAmount } = useCurrency()
   const jarBalances = useQuery(api.jars.getJarBalances)
   const deleteGoal = useMutation(api.goals.deleteGoal)
 
@@ -115,7 +115,7 @@ export function GoalCard({ goal, currency }: GoalCardProps) {
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <GoalDetailDialog goal={goal} currency={currency}>
+          <GoalDetailDialog goal={goal}>
             <Button
               variant="ghost"
               size="icon-sm"
@@ -137,10 +137,10 @@ export function GoalCard({ goal, currency }: GoalCardProps) {
       <CardContent className="space-y-3">
         <div className="flex items-baseline justify-between">
           <span className="text-2xl font-bold">
-            {formatCurrency(currentAmount, currency)}
+            {formatDisplayAmount(currentAmount)}
           </span>
           <span className="text-sm text-muted-foreground">
-            of {formatCurrency(goal.targetAmount, currency)}
+            of {formatDisplayAmount(goal.targetAmount)}
           </span>
         </div>
 

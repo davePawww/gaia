@@ -24,6 +24,7 @@ import {
 import { toast } from "sonner"
 import { formatCurrency, type CurrencyCode } from "@wealth-compass/lib/currency"
 import type { Id } from "../../convex/_generated/dataModel"
+import { useCurrency } from "@wealth-compass/lib/use-currency"
 
 interface WithdrawDialogProps {
   currency: CurrencyCode
@@ -31,6 +32,7 @@ interface WithdrawDialogProps {
 }
 
 export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
+  const { formatDisplayAmount, toCanonicalAmount } = useCurrency()
   const [open, setOpen] = useState(false)
   const [selectedJarId, setSelectedJarId] = useState<string>("")
   const [categoryId, setCategoryId] = useState<string>("")
@@ -51,6 +53,7 @@ export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
   const withdraw = useMutation(api.transactions.withdraw)
 
   const totalAmount = parseFloat(amount) || 0
+  const canonicalAmount = toCanonicalAmount(totalAmount)
   const selectedJar = jarBalances?.find((jb) => jb.jar._id === selectedJarId)
   const selectedCategory = categories?.find((cat) => cat._id === categoryId)
 
@@ -63,7 +66,7 @@ export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
       toast.error("Please enter a valid amount")
       return
     }
-    if (selectedJar && totalAmount > selectedJar.balance) {
+    if (selectedJar && canonicalAmount > selectedJar.balance) {
       toast.error("Insufficient balance")
       return
     }
@@ -72,7 +75,7 @@ export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
     try {
       await withdraw({
         jarId: selectedJarId as Id<"jars">,
-        amount: totalAmount,
+        amount: canonicalAmount,
         note: note.trim() || undefined,
         categoryId: categoryId ? (categoryId as Id<"categories">) : undefined,
       })
@@ -132,7 +135,7 @@ export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
                       />
                       <span>{JAR_FULL_NAMES[jb.jar.name] ?? jb.jar.name}</span>
                       <span className="text-muted-foreground">
-                        ({formatCurrency(jb.balance, currency)})
+                        ({formatDisplayAmount(jb.balance)})
                       </span>
                     </div>
                   </SelectItem>
@@ -153,7 +156,7 @@ export function WithdrawDialog({ currency, children }: WithdrawDialogProps) {
             />
             {selectedJar && (
               <p className="text-xs text-muted-foreground">
-                Available: {formatCurrency(selectedJar.balance, currency)}
+                Available: {formatDisplayAmount(selectedJar.balance)}
               </p>
             )}
           </div>
